@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1017235001589",
+    "project_id": "homeapps-bd5bf",
+    "storage_bucket": "homeapps-bd5bf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1017235001589:android:260273aed901718f21b5bc",
+        "android_client_info": {
+          "package_name": "com.example.home_grocery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAg1pL5_wWiYy_0uJ3rq9_F_IWe7eoS9nY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
