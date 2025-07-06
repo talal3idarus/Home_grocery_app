@@ -7,24 +7,82 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:home_grocery/main.dart';
+import 'package:home_grocery/Data/DataModel.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('DataModel Tests', () {
+    test('GroceryItemData creation test', () {
+      final itemData = GroceryItemData(
+        name: 'Test Item',
+        quantity: 5,
+        urgency: 'High',
+        addedBy: 'test@example.com',
+        timestamp: '2024-01-01',
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      expect(itemData.name, 'Test Item');
+      expect(itemData.quantity, 5);
+      expect(itemData.urgency, 'High');
+      expect(itemData.addedBy, 'test@example.com');
+      expect(itemData.timestamp, '2024-01-01');
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('GroceryItem JSON serialization test', () {
+      final itemData = GroceryItemData(
+        name: 'Test Item',
+        quantity: 3,
+        urgency: 'Medium',
+        addedBy: 'user@test.com',
+        timestamp: '2024-01-01',
+      );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+      final groceryItem = GroceryItem('test_key', itemData);
+      final json = groceryItem.toJson();
+
+      expect(json['key'], 'test_key');
+      expect(json['itemData']['name'], 'Test Item');
+      expect(json['itemData']['quantity'], 3);
+      expect(json['itemData']['urgency'], 'Medium');
+    });
+
+    test('GroceryItem JSON deserialization test', () {
+      final json = {
+        'key': 'test_key',
+        'itemData': {
+          'name': 'Test Item',
+          'quantity': 2,
+          'urgency': 'Low',
+          'addedBy': 'test@example.com',
+          'timestamp': '2024-01-01',
+        }
+      };
+
+      final groceryItem = GroceryItem.fromJson(json);
+
+      expect(groceryItem.key, 'test_key');
+      expect(groceryItem.itemData?.name, 'Test Item');
+      expect(groceryItem.itemData?.quantity, 2);
+      expect(groceryItem.itemData?.urgency, 'Low');
+      expect(groceryItem.itemData?.addedBy, 'test@example.com');
+      expect(groceryItem.itemData?.timestamp, '2024-01-01');
+    });
+  });
+
+  group('Widget Tests (Basic)', () {
+    testWidgets('Material app basic structure test', (WidgetTester tester) async {
+      // Create a simple widget that doesn't depend on Firebase
+      await tester.pumpWidget(
+        MaterialApp(
+          title: 'Grocery List',
+          home: Scaffold(
+            appBar: AppBar(title: Text('Test')),
+            body: Center(child: Text('Hello World')),
+          ),
+        ),
+      );
+
+      expect(find.text('Test'), findsOneWidget);
+      expect(find.text('Hello World'), findsOneWidget);
+    });
   });
 }

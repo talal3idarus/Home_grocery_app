@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:home_grocery/Screens/Home.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../data/Auth.dart';
+import '../Data/Auth.dart';
+import 'Register.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -102,6 +103,16 @@ class _LoginPageState extends State<LoginPage> {
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                 ),
+              ),
+              const SizedBox(height: 16.0),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => RegisterPage()),
+                  );
+                },
+                child: const Text('Don\'t have an account? Register'),
               ),
             ],
           ),
