@@ -3,6 +3,7 @@ import '../Data/DatabaseHelper.dart';
 import "../Data/DataModel.dart";
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'AnimatedDialog.dart';
 
 
 class AddItemPage extends StatefulWidget {
@@ -46,8 +47,9 @@ class _AddItemPageState extends State<AddItemPage> {
         : _tagsController.text.trim().split(',').map((e) => e.trim()).toList();
 
     if (name.isEmpty || quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter valid item details.')),
+      AnimatedDialog.showWarning(
+        context: context,
+        message: 'Please enter valid item details.',
       );
       return;
     }
@@ -69,16 +71,20 @@ class _AddItemPageState extends State<AddItemPage> {
 
     try {
       await _databaseHelper.addNewGroceryItem(newItemData);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Item added successfully!')),
+      AnimatedDialog.showSuccess(
+        context: context,
+        message: 'Item added successfully!',
+        onPressed: () {
+          _nameController.clear();
+          _quantityController.clear();
+          _tagsController.clear();
+          Navigator.pop(context);
+        },
       );
-      _nameController.clear();
-      _quantityController.clear();
-      _tagsController.clear();
-      Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add item: $e')),
+      AnimatedDialog.showError(
+        context: context,
+        message: 'Failed to add item: $e',
       );
     }
 }

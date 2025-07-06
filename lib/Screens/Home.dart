@@ -4,8 +4,11 @@ import '../Data/DatabaseHelper.dart';
 import '../Data/DataModel.dart';
 import '../Data/ConnectivityService.dart';
 import '../Data/ThemeProvider.dart';
-import '../Reusable/GroceryItemCard.dart'; // Import your GroceryItemCard widget
+import '../Reusable/AnimatedGroceryItemCard.dart';
 import '../Reusable/AddItemPage.dart';
+import '../Reusable/PageTransitions.dart';
+import '../Reusable/AnimatedLoadingWidget.dart';
+import '../Reusable/AnimatedDialog.dart';
 import '../Screens/Login.dart';
 import '../Data/Auth.dart';
 
@@ -14,7 +17,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
   final ConnectivityService _connectivity = ConnectivityService();
   List<GroceryItem> _productList = []; // Initialize your product list
@@ -26,10 +29,44 @@ class _HomePageState extends State<HomePage> {
   bool _isConnected = true;
   bool _isSelectionMode = false; // For bulk operations
   Set<String> _selectedItems = {}; // Selected item keys
+  
+  // Animation controllers
+  late AnimationController _fabAnimationController;
+  late AnimationController _categoryFilterAnimationController;
+  late Animation<double> _fabScaleAnimation;
+  late Animation<Offset> _categoryFilterSlideAnimation;
 
   @override
   void initState() {
     super.initState();
+    
+    // Initialize animation controllers
+    _fabAnimationController = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _categoryFilterAnimationController = AnimationController(
+      duration: Duration(milliseconds: 500),
+      vsync: this,
+    );
+    
+    // Initialize animations
+    _fabScaleAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _fabAnimationController,
+      curve: Curves.elasticOut,
+    ));
+    
+    _categoryFilterSlideAnimation = Tween<Offset>(
+      begin: Offset(-1.0, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _categoryFilterAnimationController,
+      curve: Curves.easeInOut,
+    ));
+    
     // Fetch grocery items when the page loads
     _fetchGroceryItems();
     _loadCategories();
@@ -41,6 +78,17 @@ class _HomePageState extends State<HomePage> {
     _connectivity.onConnectivityChanged.listen((result) {
       _checkConnectivity();
     });
+    
+    // Start animations
+    _fabAnimationController.forward();
+    _categoryFilterAnimationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fabAnimationController.dispose();
+    _categoryFilterAnimationController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkConnectivity() async {
@@ -73,8 +121,9 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isLoading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching items: $e')),
+      AnimatedDialog.showError(
+        context: context,
+        message: 'Error fetching items: $e',
       );
     }
   }
@@ -128,6 +177,19 @@ class _HomePageState extends State<HomePage> {
 
   // Method to delete selected items
   void _bulkDelete() async {
+    bool? confirmed = await AnimatedDialog.showConfirmation(
+      context: context,
+      title: 'Delete Selected Items',
+      message: 'Are you sure you want to delete ${_selectedItems.length} selected items? This action cannot be undone.',
+      confirmText: 'Delete All',
+      cancelText: 'Cancel',
+      confirmColor: Colors.red,
+      icon: Icons.delete_sweep,
+    );
+    
+    if (confirmed != true) return;
+    
+    int deletedCount = _selectedItems.length;
     for (String key in _selectedItems) {
       await _databaseHelper.deleteGroceryItem(key);
     }
@@ -136,13 +198,27 @@ class _HomePageState extends State<HomePage> {
       _isSelectionMode = false;
     });
     _fetchGroceryItems();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_selectedItems.length} items deleted')),
+    AnimatedDialog.showSuccess(
+      context: context,
+      message: '$deletedCount items deleted',
     );
   }
 
   // Method to mark selected items as completed
   void _bulkComplete() async {
+    bool? confirmed = await AnimatedDialog.showConfirmation(
+      context: context,
+      title: 'Complete Selected Items',
+      message: 'Mark ${_selectedItems.length} selected items as completed?',
+      confirmText: 'Mark Complete',
+      cancelText: 'Cancel',
+      confirmColor: Colors.green,
+      icon: Icons.check_circle_outline,
+    );
+    
+    if (confirmed != true) return;
+    
+    int completedCount = _selectedItems.length;
     for (String key in _selectedItems) {
       await _databaseHelper.toggleItemCompletion(key, true);
     }
@@ -151,27 +227,43 @@ class _HomePageState extends State<HomePage> {
       _isSelectionMode = false;
     });
     _fetchGroceryItems();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${_selectedItems.length} items marked as completed')),
+    AnimatedDialog.showSuccess(
+      context: context,
+      message: '$completedCount items marked as completed',
     );
   }
 
   // Method to handle logout action
   void _logout() async {
+    bool? confirmed = await AnimatedDialog.showConfirmation(
+      context: context,
+      title: 'Logout',
+      message: 'Are you sure you want to logout?',
+      confirmText: 'Logout',
+      cancelText: 'Cancel',
+      confirmColor: Colors.orange,
+      icon: Icons.logout,
+    );
+    
+    if (confirmed != true) return;
+    
     try {
       await Auth().signOut();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Logged out successfully')),
-      );
-
-      // Navigate to the login page
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+      AnimatedDialog.showSuccess(
+        context: context,
+        message: 'Logged out successfully',
+        onPressed: () {
+          // Navigate to the login page
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+        },
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error logging out: $e')),
+      AnimatedDialog.showError(
+        context: context,
+        message: 'Error logging out: $e',
       );
     }
   }
@@ -236,12 +328,22 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () async {
                       await _checkConnectivity();
                       if (_isConnected) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Syncing data...')),
+                        AnimatedDialog.showInfo(
+                          context: context,
+                          title: 'Syncing',
+                          message: 'Syncing your data with the server...',
+                          onPressed: () async {
+                            await _databaseHelper.syncUnsyncedItems();
+                            AnimatedDialog.showSuccess(
+                              context: context,
+                              message: 'Sync completed successfully!',
+                            );
+                          },
                         );
-                        await _databaseHelper.syncUnsyncedItems();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Sync completed!')),
+                      } else {
+                        AnimatedDialog.showWarning(
+                          context: context,
+                          message: 'No internet connection. Please check your network and try again.',
                         );
                       }
                     },
@@ -272,19 +374,21 @@ class _HomePageState extends State<HomePage> {
           ),
           // Category filter
           if (_categories.isNotEmpty)
-            Container(
-              height: 60,
-              margin: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Categories:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  SizedBox(height: 4),
-                  Expanded(
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length + 1, // +1 for "All" option
-                      itemBuilder: (context, index) {
+            SlideTransition(
+              position: _categoryFilterSlideAnimation,
+              child: Container(
+                height: 60,
+                margin: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Categories:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    SizedBox(height: 4),
+                    Expanded(
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length + 1, // +1 for "All" option
+                        itemBuilder: (context, index) {
                         if (index == 0) {
                           return GestureDetector(
                             onTap: () {
@@ -345,6 +449,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+            ),
           // Row for urgency levels (Now clickable)
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -386,9 +491,50 @@ class _HomePageState extends State<HomePage> {
           ),
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator()) // Show loading spinner
+                ? AnimatedLoadingWidget(
+                    message: 'Loading your grocery list...',
+                  ) // Show animated loading spinner
                 : displayedItems.isEmpty
-                ? Center(child: Text('No items found.')) // Message if no items are found
+                ? Center(
+                    child: TweenAnimationBuilder<double>(
+                      duration: Duration(milliseconds: 800),
+                      tween: Tween(begin: 0.0, end: 1.0),
+                      builder: (context, value, child) {
+                        return Transform.scale(
+                          scale: value,
+                          child: Opacity(
+                            opacity: value,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.shopping_cart_outlined,
+                                  size: 64,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'No items found.',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Tap the + button to add your first item!',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ) // Animated empty state message
                 : RefreshIndicator(
                     onRefresh: () async {
                       _fetchGroceryItems();
@@ -407,31 +553,23 @@ class _HomePageState extends State<HomePage> {
                             child: Icon(Icons.delete, color: Colors.white), // Delete icon
                           ),
                           confirmDismiss: (direction) async {
-                            // Show confirmation dialog
-                            return await showDialog(
+                            // Show animated confirmation dialog
+                            return await AnimatedDialog.showConfirmation(
                               context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text('Confirm Delete'),
-                                  content: Text('Are you sure you want to delete ${item.itemData?.name}?'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
-                                      child: Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
-                                      child: Text('Delete'),
-                                    ),
-                                  ],
-                                );
-                              },
+                              title: 'Confirm Delete',
+                              message: 'Are you sure you want to delete ${item.itemData?.name}?',
+                              confirmText: 'Delete',
+                              cancelText: 'Cancel',
+                              confirmColor: Colors.red,
+                              icon: Icons.delete_outline,
                             );
                           },
                           onDismissed: (direction) {
+                            String itemName = item.itemData?.name ?? 'Item';
                             _deleteGroceryItem(item.key!); // Call the delete method
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${item.itemData?.name} deleted')),
+                            AnimatedDialog.showSuccess(
+                              context: context,
+                              message: '$itemName deleted',
                             );
                           },
                           child: GestureDetector(
@@ -445,8 +583,9 @@ class _HomePageState extends State<HomePage> {
                                       borderRadius: BorderRadius.circular(8),
                                     )
                                   : null,
-                              child: GroceryItemCard(
+                              child: AnimatedGroceryItemCard(
                                 item: item,
+                                index: index,
                                 onToggleCompletion: _isSelectionMode ? null : _toggleItemCompletion,
                               ),
                             ),
@@ -458,15 +597,18 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigate to AddItemPage
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddItemPage()),
-          );
-        },
-        child: Icon(Icons.add),
+      floatingActionButton: ScaleTransition(
+        scale: _fabScaleAnimation,
+        child: FloatingActionButton(
+          onPressed: () {
+            // Navigate to AddItemPage with custom page transition animation
+            Navigator.push(
+              context,
+              SlidePageRoute(child: AddItemPage()),
+            );
+          },
+          child: Icon(Icons.add),
+        ),
       ),
       bottomNavigationBar: _isSelectionMode && _selectedItems.isNotEmpty 
           ? BottomAppBar(

@@ -3,6 +3,7 @@ import '../Data/DatabaseHelper.dart';
 import "../Data/DataModel.dart";
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'AnimatedDialog.dart';
 
 class EditItemPage extends StatefulWidget {
   final GroceryItem item;
@@ -52,8 +53,9 @@ class _EditItemPageState extends State<EditItemPage> {
         : _tagsController.text.trim().split(',').map((e) => e.trim()).toList();
 
     if (name.isEmpty || quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter valid item details.')),
+      AnimatedDialog.showWarning(
+        context: context,
+        message: 'Please enter valid item details.',
       );
       return;
     }
@@ -75,13 +77,17 @@ class _EditItemPageState extends State<EditItemPage> {
 
     try {
       await _databaseHelper.updateGroceryItem(widget.item.key!, updatedItemData);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Item updated successfully!')),
+      AnimatedDialog.showSuccess(
+        context: context,
+        message: 'Item updated successfully!',
+        onPressed: () {
+          Navigator.pop(context);
+        },
       );
-      Navigator.pop(context);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update item: $e')),
+      AnimatedDialog.showError(
+        context: context,
+        message: 'Failed to update item: $e',
       );
     }
   }
