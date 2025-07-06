@@ -28,7 +28,14 @@ class Auth {
     await _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
-
+  Future<void> deleteAccount() async {
+    final user = _firebaseAuth.currentUser;
+    if (user != null) {
+      await user.delete();
+    } else {
+      throw Exception('No user is currently signed in');
+    }
+  }
 
   Future<void> signOut() async {
     await _firebaseAuth.signOut();

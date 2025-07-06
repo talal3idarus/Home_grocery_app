@@ -1,53 +1,56 @@
 # Home Grocery App 🛒
 
-A modern, feature-rich Flutter grocery management application with offline support, dark mode, animations, and advanced user experience features.
+A modern, feature-rich Flutter grocery management application with offline support, analytics, notifications, and comprehensive user experience features.
 
-## 🌟 Features
+## 📖 Documentation
+
+**Complete documentation is available in the [`/doc`](./doc/) folder:**
+
+- 📋 **[Project Overview](./doc/project-overview.md)** - Understanding the app's purpose and features
+- 🏗️ **[Architecture](./doc/architecture.md)** - Technical architecture and design patterns  
+- 🚀 **[Setup Guide](./doc/setup-guide.md)** - Complete installation and setup instructions
+- 👤 **[User Guide](./doc/user-guide.md)** - How to use all app features
+- 📝 **[Changelog](./doc/changelog.md)** - Version history and updates
+- 🐛 **[Known Issues](./doc/known-issues.md)** - Current bugs and limitations
+
+## 🌟 Features Overview
 
 ### Core Functionality
-- **User Authentication**: Secure login, registration, and password reset with Firebase Auth
-- **Grocery Item Management**: Add, edit, delete, and organize grocery items
-- **Categories & Tags**: Organize items with customizable categories and tags
-- **Item Completion**: Mark items as completed with visual feedback
-- **Search & Filter**: Search by name, category, or tags with real-time filtering
+- **User Authentication**: Secure login, registration with Firebase Auth
+- **Grocery Management**: Add, edit, delete, and organize grocery items
+- **Categories & Urgency**: Organize items with categories and priority levels
+- **Search & Filter**: Advanced search and filtering capabilities
+- **Offline Support**: Full offline functionality with automatic sync
 
 ### Advanced Features
-- **Offline Support**: Full offline functionality with automatic sync when online
-- **Dark Mode**: Beautiful dark theme with persistent user preference
-- **Bulk Operations**: Multi-select mode for batch operations (delete, complete)
-- **Pull-to-Refresh**: Swipe down to refresh your grocery list
-- **Animated UI**: Smooth animations throughout the app for enhanced user experience
+- **Shopping Analytics**: Track shopping history, spending, and patterns
+- **Smart Notifications**: In-app notification system with history
+- **Data Backup**: Local backup and restore functionality
+- **Theme Customization**: Dark/light themes with system preference support
+- **Settings Management**: Comprehensive app configuration options
 
 ### User Experience
-- **Modern UI Design**: Card-based layout with gradient backgrounds
-- **Responsive Design**: Adaptive layout that works on different screen sizes
-- **Animated Dialogs**: Beautiful animated dialogs for all user interactions
-- **Loading States**: Elegant loading animations and error handling
-- **Connectivity Awareness**: Visual indicators for online/offline status
+- **Material Design**: Modern UI following Material Design principles
+- **Responsive Layout**: Adaptive design for different screen sizes
+- **Smooth Animations**: Enhanced user experience with fluid transitions
+- **Accessibility**: Support for accessibility features and screen readers
+- **Performance**: Optimized for speed and efficient resource usage
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
-- Flutter SDK (3.0 or higher)
-- Dart SDK (2.17 or higher)
-- Android Studio / VS Code
-- Firebase project setup
+- Flutter SDK (3.0+)
+- Firebase project
+- Android Studio or VS Code
 
 ### Installation
+```bash
+git clone <repository-url>
+cd Home_grocery_app
+flutter pub get
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Home_grocery_app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Firebase Setup**
-   - Create a new Firebase project
+**For detailed setup instructions, see the [Setup Guide](./doc/setup-guide.md)**
    - Add Android app to your Firebase project
    - Download `google-services.json` and place it in `android/app/`
    - Enable Authentication and Realtime Database in Firebase Console
