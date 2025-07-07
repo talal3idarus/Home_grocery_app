@@ -30,7 +30,7 @@ void main() async {
             previous ?? BackupService(notificationService)..loadBackupSettings(),
         ),
       ],
-      child: MyApp(),
+      child: const MyApp(),
     ),
   );
 }
@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: AuthCheck(),
+          home: const AuthCheck(),
         );
       },
     );
@@ -56,6 +56,8 @@ class MyApp extends StatelessWidget {
 }
 
 class AuthCheck extends StatelessWidget {
+  const AuthCheck({super.key});
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -65,14 +67,14 @@ class AuthCheck extends StatelessWidget {
           final user = snapshot.data;
           if (user != null) {
             // User is logged in, show HomePage
-            return HomePage();
+            return const HomePage();
           } else {
             // User is NOT logged in, show LoginPage
             return LoginPage();
           }
         } else {
           // While checking the auth state, show a loading spinner
-          return Scaffold(
+          return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }

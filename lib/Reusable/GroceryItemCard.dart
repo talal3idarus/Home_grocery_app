@@ -8,10 +8,10 @@ class GroceryItemCard extends StatelessWidget {
   final Function(String, bool)? onToggleCompletion;
 
   const GroceryItemCard({
-    Key? key,
+    super.key,
     required this.item,
     this.onToggleCompletion,
-  }) : super(key: key);
+  });
 
   Color _getUrgencyColor(String urgency) {
     switch (urgency.toLowerCase()) {
@@ -42,7 +42,7 @@ class GroceryItemCard extends StatelessWidget {
 
     return Card(
       elevation: 4,
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       color: item.itemData?.isCompleted == true 
           ? Colors.grey.withOpacity(0.3) 
           : null,
@@ -67,19 +67,18 @@ class GroceryItemCard extends StatelessWidget {
           ),
         ), // Display grocery item name
         subtitle: Opacity(
-          opacity: item.itemData?.isCompleted == true ? 0.6 : 1.0,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start, // Align to the left
-            children: [
-              Text(
-                'Quantity: ${item.itemData?.quantity ?? 0}', // Display quantity
-              ),
-              if (item.itemData?.category != null) ...[
-                SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.category, size: 14, color: Colors.grey),
-                    SizedBox(width: 4),
+          opacity: item.itemData?.isCompleted == true ? 0.6 : 1.0,        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // Align to the left
+          children: [
+            Text(
+              'Quantity: ${item.itemData?.quantity ?? 0}', // Display quantity
+            ),
+            if (item.itemData?.category != null) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.category, size: 14, color: Colors.grey),
+                  const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         item.itemData!.category!,

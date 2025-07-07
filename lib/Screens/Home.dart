@@ -4,7 +4,6 @@ import '../Data/DatabaseHelper.dart';
 import '../Data/DataModel.dart';
 import '../Data/Auth.dart';
 import '../Data/HistoryProvider.dart';
-import '../Data/SettingsProvider.dart';
 import '../Data/ThemeProvider.dart';
 import '../Data/ConnectivityService.dart';
 import '../Reusable/GroceryItemCard.dart';
@@ -15,7 +14,7 @@ import '../Screens/ShoppingHistoryPage.dart';
 import '../Screens/NotificationsPage.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -34,6 +33,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  late AnimationController _refreshAnimationController;
+  late Animation<double> _refreshAnimation;
 
   @override
   void initState() {
@@ -46,6 +47,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+    
+    // Initialize refresh animation
+    _refreshAnimationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _refreshAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _refreshAnimationController, curve: Curves.easeInOut),
     );
     
     _fetchGroceryItems();
@@ -67,6 +77,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _animationController.dispose();
+    _refreshAnimationController.dispose();
     super.dispose();
   }
 
@@ -90,6 +101,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  Future<void> _refreshData() async {
+    // Start refresh animation
+    _refreshAnimationController.forward();
+    
+    // Fetch fresh data
+    await _fetchGroceryItems();
+    await _loadCategories();
+    await _checkConnectivity();
+    
+    // Reset animation after a delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    _refreshAnimationController.reset();
+  }
+
   Future<void> _loadCategories() async {
     try {
       List<Map<String, dynamic>> categories = await _databaseHelper.getCategories();
@@ -97,7 +122,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         _categories = categories;
       });
     } catch (e) {
-      print('Error loading categories: $e');
+      // Error loading categories - using empty list
     }
   }
 
@@ -144,16 +169,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     final filteredProducts = _getFilteredProducts();
 
     return Scaffold(
-      backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: isDark ? Colors.grey[850] : Colors.white,
-        foregroundColor: isDark ? Colors.white : Colors.black87,
-        title: Text(
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        surfaceTintColor: Colors.transparent,
+        title: const Text(
           'Home Grocery',
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -165,29 +191,31 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           if (!_isConnected)
             Icon(
               Icons.wifi_off,
-              color: Colors.orange,
+              color: colorScheme.error,
             ),
-          SizedBox(width: 8),
-          Consumer<SettingsProvider>(
-            builder: (context, settings, child) {
-              return IconButton(
-                icon: Icon(Icons.notifications_outlined),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => NotificationsPage()),
+          const SizedBox(width: 8),
+          AnimatedBuilder(
+            animation: _refreshAnimation,
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _refreshAnimation.value * 2 * 3.14159, // Full rotation
+                child: IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh',
+                  onPressed: _isLoading ? null : _refreshData,
                 ),
               );
             },
           ),
         ],
       ),
-      drawer: _buildSideDrawer(isDark),
+      drawer: _buildSideDrawer(),
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Column(
           children: [
-            _buildSearchAndFilters(isDark),
-            _buildCategoryFilter(isDark),
+            _buildSearchAndFilters(),
+            _buildCategoryFilter(),
             Expanded(
               child: _isLoading
                   ? _buildLoadingState()
@@ -200,59 +228,122 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _navigateToAddItemPage,
-        icon: Icon(Icons.add),
-        label: Text('Add Item'),
-        backgroundColor: theme.primaryColor,
-        foregroundColor: Colors.white,
+        icon: const Icon(Icons.add),
+        label: const Text('Add Item'),
+        backgroundColor: theme.colorScheme.primary,
+        foregroundColor: theme.colorScheme.onPrimary,
+        elevation: 6,
       ),
     );
   }
 
-  Widget _buildSideDrawer(bool isDark) {
+  Widget _buildSideDrawer() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Drawer(
-      backgroundColor: isDark ? Colors.grey[850] : Colors.white,
+      backgroundColor: colorScheme.surface,
       child: Column(
         children: [
-          DrawerHeader(
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 240, maxHeight: 300),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: isDark 
-                    ? [Colors.grey[800]!, Colors.grey[900]!]
-                    : [Colors.blue[400]!, Colors.blue[600]!],
+                colors: [
+                  colorScheme.primary,
+                  colorScheme.primaryContainer,
+                  colorScheme.secondary.withOpacity(0.3),
+                ],
+                stops: const [0.0, 0.7, 1.0],
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: Colors.white.withOpacity(0.2),
-                  child: Icon(
-                    Icons.shopping_cart,
-                    size: 30,
-                    color: Colors.white,
-                  ),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 20),
+                    
+                    // App Title with Emoji
+                    Row(
+                      children: [
+                        Text(
+                          '🛒',
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                        const SizedBox(width: 12),
+                        Flexible(
+                          child: Text(
+                            'Home Grocery',
+                            style: TextStyle(
+                              color: colorScheme.onPrimary,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                              height: 1.1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: 8),
+                    
+                    // Subtitle
+                    Text(
+                      'Smart shopping made simple',
+                      style: TextStyle(
+                        color: colorScheme.onPrimary.withOpacity(0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 24),
+                    
+                    // Statistics or additional info
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: colorScheme.onPrimary.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colorScheme.onPrimary.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.lightbulb_outline_rounded,
+                            color: colorScheme.onPrimary.withOpacity(0.9),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Organize your lists efficiently',
+                              style: TextStyle(
+                                color: colorScheme.onPrimary.withOpacity(0.9),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 8),
+                  ],
                 ),
-                SizedBox(height: 12),
-                Text(
-                  'Grocery Manager',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'Stay organized, shop smart',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
           Expanded(
@@ -298,7 +389,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     );
                   },
                 ),
-                Divider(height: 32),
+                Divider(
+                  height: 32,
+                  color: colorScheme.outline.withOpacity(0.2),
+                  indent: 16,
+                  endIndent: 16,
+                ),
                 Consumer<ThemeProvider>(
                   builder: (context, themeProvider, child) {
                     return _buildDrawerItem(
@@ -321,16 +417,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.all(16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: colorScheme.outline.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+            ),
             child: ElevatedButton.icon(
               onPressed: _logout,
-              icon: Icon(Icons.logout),
-              label: Text('Logout'),
+              icon: const Icon(Icons.logout),
+              label: const Text('Logout'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[400],
-                foregroundColor: Colors.white,
-                minimumSize: Size(double.infinity, 48),
+                backgroundColor: colorScheme.error,
+                foregroundColor: colorScheme.onError,
+                minimumSize: const Size(double.infinity, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
               ),
             ),
           ),
@@ -346,50 +454,57 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
     
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: isSelected 
-            ? theme.primaryColor.withOpacity(0.1)
+            ? colorScheme.primaryContainer
             : Colors.transparent,
       ),
       child: ListTile(
         leading: Icon(
           icon,
           color: isSelected 
-              ? theme.primaryColor
-              : (isDark ? Colors.grey[300] : Colors.grey[700]),
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.onSurfaceVariant,
+          size: 24,
         ),
         title: Text(
           title,
           style: TextStyle(
             color: isSelected 
-                ? theme.primaryColor
-                : (isDark ? Colors.grey[300] : Colors.grey[700]),
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ? colorScheme.onPrimaryContainer
+                : colorScheme.onSurfaceVariant,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 16,
           ),
         ),
         onTap: onTap,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        minLeadingWidth: 24,
       ),
     );
   }
 
-  Widget _buildSearchAndFilters(bool isDark) {
+  Widget _buildSearchAndFilters() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[850] : Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: colorScheme.shadow.withOpacity(0.1),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -399,15 +514,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: isDark ? Colors.grey[800] : Colors.grey[100],
+              color: colorScheme.surfaceContainerHighest,
             ),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search grocery items...',
-                prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               ),
+              style: TextStyle(color: colorScheme.onSurface),
               onChanged: (value) {
                 setState(() {
                   _searchQuery = value;
@@ -416,7 +533,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
           
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           
           // Urgency Filter
           Row(
@@ -425,22 +542,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 'Priority:',
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: isDark ? Colors.grey[300] : Colors.grey[700],
+                  color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
-                      _buildUrgencyChip('Low', Colors.green, isDark),
-                      SizedBox(width: 8),
-                      _buildUrgencyChip('Medium', Colors.orange, isDark),
-                      SizedBox(width: 8),
-                      _buildUrgencyChip('High', Colors.red, isDark),
-                      SizedBox(width: 8),
-                      _buildClearFiltersChip(isDark),
+                      _buildUrgencyChip('Low', Colors.green),
+                      const SizedBox(width: 8),
+                      _buildUrgencyChip('Medium', Colors.orange),
+                      const SizedBox(width: 8),
+                      _buildUrgencyChip('High', Colors.red),
+                      const SizedBox(width: 8),
+                      _buildClearFiltersChip(),
                     ],
                   ),
                 ),
@@ -452,7 +569,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildUrgencyChip(String urgency, Color color, bool isDark) {
+  Widget _buildUrgencyChip(String urgency, Color color) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     bool isSelected = _selectedUrgency == urgency;
     
     return FilterChip(
@@ -463,11 +582,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           _selectedUrgency = selected ? urgency : null;
         });
       },
-      backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
+      backgroundColor: colorScheme.surfaceContainerHighest,
       selectedColor: color.withOpacity(0.2),
       checkmarkColor: color,
       labelStyle: TextStyle(
-        color: isSelected ? color : (isDark ? Colors.grey[300] : Colors.grey[700]),
+        color: isSelected ? color : colorScheme.onSurfaceVariant,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       side: BorderSide(
@@ -477,57 +596,60 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildClearFiltersChip(bool isDark) {
+  Widget _buildClearFiltersChip() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     bool hasFilters = _selectedUrgency != null || _selectedCategory != null;
     
-    if (!hasFilters) return SizedBox.shrink();
+    if (!hasFilters) return const SizedBox.shrink();
     
     return ActionChip(
-      label: Text('Clear'),
+      label: const Text('Clear'),
       onPressed: () {
         setState(() {
           _selectedUrgency = null;
           _selectedCategory = null;
         });
       },
-      backgroundColor: isDark ? Colors.grey[700] : Colors.grey[300],
+      backgroundColor: colorScheme.errorContainer,
       labelStyle: TextStyle(
-        color: isDark ? Colors.grey[300] : Colors.grey[700],
+        color: colorScheme.onErrorContainer,
       ),
     );
   }
 
-  Widget _buildCategoryFilter(bool isDark) {
-    if (_categories.isEmpty) return SizedBox.shrink();
+  Widget _buildCategoryFilter() {
+    if (_categories.isEmpty) return const SizedBox.shrink();
     
     return Container(
       height: 60,
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: _categories.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return _buildCategoryChip('All', null, isDark);
+            return _buildCategoryChip('All', null);
           }
           
           final category = _categories[index - 1];
           return _buildCategoryChip(
             category['name'],
             Color(int.parse(category['color'].substring(1), radix: 16) + 0xFF000000),
-            isDark,
           );
         },
       ),
     );
   }
 
-  Widget _buildCategoryChip(String name, Color? color, bool isDark) {
+  Widget _buildCategoryChip(String name, Color? color) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     bool isSelected = (_selectedCategory == name) || (name == 'All' && _selectedCategory == null);
     
     return Container(
-      margin: EdgeInsets.only(right: 8),
+      margin: const EdgeInsets.only(right: 8),
       child: FilterChip(
         label: Text(name),
         selected: isSelected,
@@ -536,18 +658,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             _selectedCategory = (name == 'All') ? null : (selected ? name : null);
           });
         },
-        backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
-        selectedColor: color?.withOpacity(0.2) ?? Theme.of(context).primaryColor.withOpacity(0.2),
-        checkmarkColor: color ?? Theme.of(context).primaryColor,
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        selectedColor: color?.withOpacity(0.2) ?? colorScheme.primaryContainer,
+        checkmarkColor: color ?? colorScheme.primary,
         labelStyle: TextStyle(
           color: isSelected 
-              ? (color ?? Theme.of(context).primaryColor)
-              : (isDark ? Colors.grey[300] : Colors.grey[700]),
+              ? (color ?? colorScheme.primary)
+              : colorScheme.onSurfaceVariant,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
         side: BorderSide(
           color: isSelected 
-              ? (color ?? Theme.of(context).primaryColor)
+              ? (color ?? colorScheme.primary)
               : Colors.transparent,
           width: 1.5,
         ),
