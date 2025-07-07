@@ -2,47 +2,90 @@
 
 ## 🎯 Purpose
 
-The Home Grocery App is a comprehensive Flutter-based mobile application designed to streamline grocery shopping and list management. It helps users organize their shopping needs, track purchase history, and maintain an efficient grocery workflow.
+The Home Grocery App is a comprehensive Flutter-based mobile application designed to streamline grocery shopping and list management. Built with modern Material Design 3 principles, it helps users organize their shopping needs, track purchase history, and maintain an efficient grocery workflow with a beautiful, intuitive interface.
 
 ## 🌟 Key Features
 
 ### Core Functionality
-- **Smart Grocery Lists**: Create and manage grocery items with categories and urgency levels
-- **Offline-First Design**: Works without internet connection, syncs when online
+- **Smart Grocery Lists**: Create and manage grocery items with colorful categories and urgency levels
+- **Offline-First Design**: Works seamlessly without internet connection, syncs when online
 - **User Authentication**: Secure login/registration with Firebase Auth
 - **Real-time Sync**: Automatic synchronization across devices via Firebase
+- **Swipe Actions**: Intuitive swipe-to-delete with confirmation dialogs
+- **Advanced Search**: Real-time search with instant filtering and results
+
+### Modern UI/UX (Recently Updated - July 2025)
+- **Material Design 3**: Latest Material You theming with dynamic colors
+- **Minimalist Item Cards**: Clean, modern grocery item display
+- **Enhanced Navigation**: Beautiful sidebar with user profile and quick access
+- **Responsive Layout**: Optimized for all screen sizes with fixed overflow issues
+- **Smooth Animations**: Fluid transitions and loading states
+- **Colorful Category Icons**: Visual identification with modern iconography
+- **Empty State Designs**: Informative and engaging empty state messages
 
 ### Advanced Features
-- **Shopping History**: Track completed shopping sessions with analytics
+- **Shopping History & Analytics**: Track completed shopping sessions with detailed insights
 - **Smart Analytics**: View shopping patterns, frequent items, and spending trends
-- **Customizable Categories**: Organize items by custom categories
-- **Urgency Levels**: Prioritize items by Low, Medium, High urgency
-- **Search & Filter**: Quick search and advanced filtering options
-- **Dark/Light Theme**: Full theme customization support
-- **Backup & Restore**: Data backup and restoration capabilities
-- **Notifications**: In-app notifications for important events
+- **Customizable Categories**: Organize items with visual category identification
+- **Urgency Levels**: Prioritize items by Low, Medium, High urgency with color coding
+- **Search & Filter**: Advanced filtering with category and urgency options
+- **Dark/Light Theme**: Full theme customization with system preference support
+- **Backup & Restore**: Comprehensive data backup and restoration capabilities
+- **Notifications**: In-app notification system with history tracking
+- **Connectivity Monitoring**: Smart offline/online detection with sync status
 
-### User Experience
-- **Material Design**: Clean, modern UI following Material Design principles
-- **Responsive Layout**: Optimized for different screen sizes
-- **Intuitive Navigation**: Easy-to-use interface with smooth transitions
-- **Accessibility**: Support for various accessibility features
+### Technical Excellence (Recent Improvements)
+- **Build System**: Updated to latest Android toolchain (AGP 8.7.2, Kotlin 1.9.25)
+- **Performance**: Optimized ListView rendering and animation performance
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Code Quality**: Clean architecture with proper separation of concerns
+- **Testing**: Enhanced test coverage for UI components and business logic
+- **Accessibility**: Improved screen reader support and keyboard navigation
 
 ## 🏗️ Architecture
 
 ### Design Patterns
 - **Provider Pattern**: State management using Flutter Provider
 - **Repository Pattern**: Data layer abstraction
-- **MVC Architecture**: Separation of concerns between UI, logic, and data
+- **Clean Architecture**: Separation of concerns between UI, business logic, and data
+- **Singleton Pattern**: Services and utilities management
 
-### Project Structure
+### Project Structure (Updated)
 ```
 lib/
-├── Data/           # Data models, providers, and services
-├── Screens/        # UI screens and pages
-├── Reusable/       # Reusable widgets and components
-└── main.dart       # App entry point
+├── Data/                    # Data layer
+│   ├── Auth.dart           # Authentication service
+│   ├── DatabaseHelper.dart # Firebase database operations
+│   ├── LocalStorageHelper.dart # SQLite local storage
+│   ├── ConnectivityService.dart # Network monitoring
+│   ├── ThemeProvider.dart  # Theme management
+│   ├── HistoryProvider.dart # Shopping history
+│   ├── SettingsProvider.dart # App settings
+│   ├── BackupService.dart  # Data backup/restore
+│   └── NotificationService.dart # Notifications
+├── Screens/                # UI screens
+│   ├── Home.dart          # Main grocery list screen (modernized)
+│   ├── Login.dart         # Authentication screen
+│   ├── Register.dart      # User registration
+│   ├── Settings.dart      # App settings
+│   ├── ShoppingHistoryPage.dart # Shopping analytics
+│   └── NotificationsPage.dart # Notification management
+├── Reusable/              # Reusable components
+│   ├── AddItemPage.dart   # Add item form (enhanced)
+│   ├── EditItemPage.dart  # Edit item form
+│   ├── GroceryItemCard.dart # Item display card (modernized)
+│   ├── AnimatedDialog.dart # Custom dialogs
+│   └── LoadingWidget.dart # Loading animations
+└── main.dart              # App entry point
 ```
+
+### Build System (Recently Updated)
+- **Android Gradle Plugin**: 8.7.2 (Latest)
+- **Kotlin**: 1.9.25 (Stable)
+- **Gradle**: 8.11.1
+- **Compile SDK**: 35 (Android 15)
+- **NDK**: 27.0.12077973 (Firebase compatible)
+- **Java**: OpenJDK 17 (LTS)
 
 ## 🎯 Target Users
 

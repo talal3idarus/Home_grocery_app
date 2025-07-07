@@ -5,19 +5,66 @@ All notable changes to the Home Grocery App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] - Current Development
 
 ### Added
-- Comprehensive documentation structure in `/doc` folder
-- Project architecture documentation
-- Setup and development guides
+- Enhanced build system documentation
+- Performance optimization guides
+- Troubleshooting documentation
 
-### Changed
-- Simplified Home screen design (removed iOS-style modernization)
-- Updated project structure documentation
+## [0.4.0] - 2025-07-08 🚀
 
-### Fixed
-- Import path issues from restructuring attempts
+### 🎨 **Major UI/UX Modernization**
+- **Material Design 3**: Complete overhaul with latest Material You theming
+- **Modernized Home Screen**: Enhanced search, filters, and category organization
+- **Redesigned Item Cards**: Minimalist, swipe-enabled grocery item cards
+- **Enhanced Add Item Page**: Improved form layout with better validation
+- **Modern Sidebar**: Beautiful navigation drawer with user profile
+- **Colorful Category Icons**: Visual category identification system
+
+### 🐛 **Critical Bug Fixes**
+- **Fixed RenderFlex overflow errors** in search and empty state containers
+- **Resolved "Cannot hit test a render box with no size" errors** in loading states
+- **Fixed persistent layout issues** in AddItemPage and item displays
+- **Eliminated navigation and routing errors** across all screens
+- **Resolved keyboard overflow** in input forms and search
+
+### 🔧 **Build System Improvements**
+- **Updated Android Gradle Plugin** to 8.7.2 (latest stable)
+- **Upgraded Kotlin** to 1.9.25 for better compatibility
+- **Updated Gradle wrapper** to 8.11.1
+- **Set Compile SDK** to 35 (Android 15 support)
+- **Updated NDK** to 27.0.12077973 (Firebase requirement)
+- **Fixed SDK XML version warnings** - resolved toolchain compatibility
+- **Eliminated deprecated API warnings** with proper compiler configurations
+
+### ⚡ **Performance Enhancements**
+- **Optimized ListView rendering** for large grocery lists
+- **Improved animation performance** with better frame rates
+- **Enhanced loading states** with skeleton screens
+- **Reduced memory usage** in image handling and caching
+- **Faster app startup** through optimized initialization
+
+### 🎭 **User Experience Improvements**
+- **Swipe-to-Delete**: Intuitive item removal with confirmation
+- **Enhanced Search**: Real-time search with instant results
+- **Better Empty States**: Informative messages with call-to-action
+- **Improved Error Handling**: User-friendly error messages
+- **Responsive Design**: Better adaptation to different screen sizes
+- **Smooth Transitions**: Elegant page transitions and animations
+
+### 🛠️ **Technical Improvements**
+- **Code Quality**: Comprehensive error handling and validation
+- **Clean Architecture**: Better separation of concerns
+- **Documentation**: Updated technical documentation and API references
+- **Testing**: Enhanced test coverage for UI components
+- **Accessibility**: Improved screen reader support and navigation
+
+### 📱 **Platform Compatibility**
+- **Android Support**: Enhanced support for Android 6.0+ (API 23+)
+- **Latest Flutter**: Compatible with Flutter 3.32.5+
+- **Firebase Updates**: Updated Firebase dependencies for better performance
+- **Build Tools**: Latest Android toolchain compatibility
 
 ## [0.3.0] - 2025-07-07
 

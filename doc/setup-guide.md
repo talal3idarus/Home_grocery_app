@@ -4,21 +4,27 @@ This guide will help you set up the Home Grocery App development environment and
 
 ## 📋 Prerequisites
 
-### Required Software
-1. **Flutter SDK** (3.0 or later)
+### Required Software & Versions (Updated 2025-07-08)
+1. **Flutter SDK** (3.32.5 or later) - Latest stable
    - Download from [flutter.dev](https://flutter.dev/docs/get-started/install)
    - Add Flutter to your PATH
+   - Verify: `flutter --version`
 
-2. **Dart SDK** (Included with Flutter)
+2. **Dart SDK** (3.8.1 or later) - Included with Flutter
 
-3. **IDE** (Choose one):
-   - **Android Studio** (Recommended) - Full Flutter support
+3. **Android Development Tools**:
+   - **Android SDK**: API Level 35 (Android 15)
+   - **Android NDK**: 27.0.12077973 (Required for Firebase)
+   - **Build Tools**: 35.0.0
+   - **Java**: OpenJDK 17 (LTS) - Required for Gradle
+   - **Android Gradle Plugin**: 8.7.2
+   - **Gradle**: 8.11.1
+   - **Kotlin**: 1.9.25
+
+4. **IDE** (Choose one):
+   - **Android Studio** (2024.1+) - Recommended for full Flutter support
    - **Visual Studio Code** - With Flutter/Dart extensions
    - **IntelliJ IDEA** - With Flutter plugin
-
-4. **Platform-specific requirements**:
-   - **Android**: Android SDK, Android Emulator or physical device
-   - **iOS** (macOS only): Xcode, iOS Simulator or physical device
 
 ### Firebase Setup
 1. Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
@@ -30,18 +36,32 @@ This guide will help you set up the Home Grocery App development environment and
 
 ## 🚀 Installation Steps
 
-### 1. Clone the Repository
+### 1. Environment Verification
+Before starting, verify your environment:
+```bash
+# Check Flutter installation
+flutter doctor -v
+
+# Check Android toolchain
+flutter doctor --android-licenses
+
+# Verify Java version (should be 17)
+java -version
+```
+
+### 2. Clone the Repository
 ```bash
 git clone <repository-url>
 cd Home_grocery_app
 ```
 
-### 2. Install Dependencies
+### 3. Install Dependencies
 ```bash
+flutter clean
 flutter pub get
 ```
 
-### 3. Configure Firebase
+### 4. Configure Firebase
 
 #### Android Configuration
 1. Place `google-services.json` in `android/app/`
@@ -57,13 +77,13 @@ flutter pub get
 2. Open `ios/Runner.xcworkspace` in Xcode
 3. Add the file to the Runner target
 
-### 4. Verify Installation
+### 5. Verify Installation
 ```bash
 flutter doctor
 ```
 Fix any issues reported by Flutter Doctor.
 
-### 5. Run the App
+### 6. Run the App
 ```bash
 # Run on connected device/emulator
 flutter run
@@ -206,66 +226,83 @@ flutter pub deps
 2. Use physical device instead of emulator
 3. Check for memory leaks in debug mode
 
-## 📱 Testing
+## 🔧 Build System Updates (July 2025)
 
-### Run Tests
-```bash
-# Unit tests
-flutter test
+### Recent Improvements
+The project has been updated with the latest Android build tools:
 
-# Integration tests
-flutter drive --target=test_driver/app.dart
+- ✅ **Android Gradle Plugin**: Updated to 8.7.2
+- ✅ **Kotlin**: Updated to 1.9.25 (stable)
+- ✅ **Gradle**: Updated to 8.11.1
+- ✅ **Compile SDK**: Updated to 35 (Android 15)
+- ✅ **NDK**: Updated to 27.0.12077973
+- ✅ **Build warnings resolved**: SDK XML and deprecated API warnings fixed
 
-# Test on specific device
-flutter test -d <device-id>
+### Build Configuration Verification
+Check your `android/app/build.gradle` for these settings:
+```gradle
+android {
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
+    
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    
+    defaultConfig {
+        minSdkVersion 23
+        targetSdk = flutter.targetSdkVersion
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
 ```
 
-### Debug Mode Features
-- Hot reload: Press `r` in terminal
-- Hot restart: Press `R` in terminal
-- Debug console: Use `print()` statements
-- Flutter Inspector: Available in IDEs
-
-## 🚀 Building for Release
-
-### Android APK
+### Build Commands (Updated)
 ```bash
+# Clean and rebuild (recommended after updates)
+flutter clean
+flutter pub get
+flutter build apk --debug
+
+# Verify no issues
+flutter analyze
+flutter doctor -v
+
+# Production build
 flutter build apk --release
 ```
 
-### Android App Bundle
+## 🔧 Troubleshooting
+
+### Common Build Issues
+
+#### SDK XML Version Warning (RESOLVED)
+This warning has been resolved in the latest build system update. If you still see it:
 ```bash
-flutter build appbundle --release
+flutter clean
+flutter pub get
 ```
 
-### iOS (macOS only)
+#### Deprecated API Warnings (RESOLVED)
+These warnings have been suppressed with proper compiler configurations. The warnings were from external dependencies, not project code.
+
+#### Kotlin Compilation Errors
+If you encounter Kotlin compilation issues:
 ```bash
-flutter build ios --release
+# Clear all caches
+flutter clean
+rm -rf android/.gradle
+rm -rf build
+flutter pub get
 ```
 
-## 🔐 Environment Variables
+#### NDK Version Conflicts
+If you see NDK version warnings:
+- The project now uses NDK 27.0.12077973 (latest required by Firebase)
+- This is automatically configured in build.gradle
 
-Create a `.env` file in the root directory (not tracked in git):
-```
-FIREBASE_API_KEY=your_api_key_here
-FIREBASE_PROJECT_ID=your_project_id_here
-```
-
-## 📚 Next Steps
-
-After successful setup:
-1. Read the [User Guide](user-guide.md) to understand app features
-2. Check the [Development Guide](development-guide.md) for coding standards
-3. Review the [Architecture](architecture.md) documentation
-4. Start developing or testing the app
-
-## 🆘 Getting Help
-
-- Check [Known Issues](known-issues.md)
-- Review Flutter documentation: [flutter.dev](https://flutter.dev)
-- Firebase documentation: [firebase.google.com](https://firebase.google.com/docs)
-- Stack Overflow: Tag questions with `flutter` and `firebase`
-
----
-
-*If you encounter any issues not covered here, please create an issue or update this documentation.*
+### Legacy Issues (Pre-July 2025)

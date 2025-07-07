@@ -2,14 +2,52 @@
 
 This guide covers development standards, coding practices, and contribution guidelines for the Home Grocery App.
 
-## 🛠️ Development Environment
+## 🛠️ Development Environment (Updated July 2025)
 
-### Required Tools
-- **Flutter SDK**: Version 3.0 or higher
-- **Dart SDK**: Version 2.17 or higher  
-- **IDE**: Android Studio (recommended) or VS Code
+### Required Tools & Versions
+- **Flutter SDK**: Version 3.32.5+ (Latest stable)
+- **Dart SDK**: Version 3.8.1+ (Included with Flutter)
+- **Android SDK**: API Level 35 (Android 15)
+- **NDK**: 27.0.12077973 (Required for Firebase)
+- **Java**: OpenJDK 17 (LTS)
+- **Android Gradle Plugin**: 8.7.2
+- **Gradle**: 8.11.1
+- **Kotlin**: 1.9.25
+- **IDE**: Android Studio 2024.1+ (recommended) or VS Code
 - **Git**: For version control
 - **Firebase CLI**: For backend management
+
+### Build System Configuration
+The project uses the latest Android toolchain with these key configurations:
+
+#### Android Settings (android/app/build.gradle)
+```gradle
+android {
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
+    
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    
+    defaultConfig {
+        minSdkVersion 23  // Android 6.0+
+        targetSdk = flutter.targetSdkVersion
+    }
+}
+```
+
+### Recent Build System Improvements
+- ✅ **Resolved SDK XML version warnings** - Updated to compatible toolchain
+- ✅ **Fixed deprecated API warnings** - Proper compiler configurations
+- ✅ **Eliminated Kotlin compilation errors** - Stable version with proper caching
+- ✅ **NDK compatibility** - Updated to match Firebase requirements
+- ✅ **Build performance** - Optimized for faster builds
 
 ### Recommended VS Code Extensions
 ```json
@@ -19,7 +57,9 @@ This guide covers development standards, coding practices, and contribution guid
     "dart-code.dart-code",
     "ms-vscode.vscode-json",
     "bradlc.vscode-tailwindcss",
-    "usernamehw.errorlens"
+    "usernamehw.errorlens",
+    "alexisvt.flutter-snippets",
+    "nash.awesome-flutter-snippets"
   ]
 }
 ```
@@ -30,11 +70,13 @@ This guide covers development standards, coding practices, and contribution guid
 git clone <repository-url>
 cd Home_grocery_app
 
-# Install dependencies
+# Clean and install dependencies
+flutter clean
 flutter pub get
 
-# Run code generation (if needed)
-flutter packages pub run build_runner build
+# Verify environment
+flutter doctor -v
+flutter analyze
 
 # Run the app
 flutter run

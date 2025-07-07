@@ -1,571 +1,339 @@
 # API Reference
 
-This document provides detailed information about the key classes, methods, and APIs used in the Home Grocery App.
+This document provides detailed information about the Home Grocery App's classes, methods, and APIs.
 
-## 📋 Table of Contents
+## 📱 Core Components (Updated July 2025)
 
-- [Data Models](#data-models)
-- [Providers](#providers)
-- [Services](#services)
-- [Database Layer](#database-layer)
-- [UI Components](#ui-components)
-- [Utilities](#utilities)
+### Authentication (`lib/Data/Auth.dart`)
 
-## 🗂️ Data Models
-
-### GroceryItem
-
-Main entity representing a grocery item.
-
-```dart
-class GroceryItem {
-  String? key;
-  GroceryItemData? itemData;
-  String category;
-  String urgency;
-  bool isCompleted;
-  bool isSynced;
-
-  GroceryItem({
-    this.key,
-    this.itemData,
-    required this.category,
-    required this.urgency,
-    this.isCompleted = false,
-    this.isSynced = false,
-  });
-
-  // Serialization methods
-  Map<String, dynamic> toJson();
-  factory GroceryItem.fromJson(Map<String, dynamic> json);
-}
-```
-
-**Properties:**
-- `key`: Unique identifier for the item
-- `itemData`: Detailed information about the item
-- `category`: Item category (e.g., "Produce", "Dairy")
-- `urgency`: Priority level ("Low", "Medium", "High")
-- `isCompleted`: Whether the item has been purchased
-- `isSynced`: Whether the item is synchronized with remote storage
-
-### GroceryItemData
-
-Detailed information about a grocery item.
-
-```dart
-class GroceryItemData {
-  String name;
-  String? description;
-  String? category;
-  String? urgency;
-  List<String>? tags;
-  bool isCompleted;
-
-  GroceryItemData({
-    required this.name,
-    this.description,
-    this.category,
-    this.urgency,
-    this.tags,
-    this.isCompleted = false,
-  });
-
-  // Serialization methods
-  Map<String, dynamic> toJson();
-  factory GroceryItemData.fromJson(Map<String, dynamic> json);
-}
-```
-
-### ShoppingSession
-
-Represents a completed shopping trip.
-
-```dart
-class ShoppingSession {
-  String id;
-  List<GroceryItem> items;
-  DateTime timestamp;
-  int totalItems;
-  double totalSpent;
-
-  ShoppingSession({
-    required this.id,
-    required this.items,
-    required this.timestamp,
-    required this.totalItems,
-    required this.totalSpent,
-  });
-
-  // Serialization methods
-  Map<String, dynamic> toJson();
-  factory ShoppingSession.fromJson(Map<String, dynamic> json);
-}
-```
-
-## 🔄 Providers
-
-### HistoryProvider
-
-Manages shopping history and analytics.
-
-```dart
-class HistoryProvider extends ChangeNotifier {
-  // Public getters
-  List<ShoppingSession> get shoppingHistory;
-  Map<String, int> get itemFrequency;
-
-  // Methods
-  Future<void> loadHistory();
-  Future<void> saveHistory();
-  void addShoppingSession(List<GroceryItem> completedItems);
-  Map<String, dynamic> getShoppingAnalytics();
-  void clearHistory();
-}
-```
-
-**Key Methods:**
-
-#### `loadHistory()`
-Loads shopping history from local storage.
-- **Returns**: `Future<void>`
-- **Usage**: Called during app initialization
-
-#### `addShoppingSession(List<GroceryItem> completedItems)`
-Records a completed shopping session.
-- **Parameters**: 
-  - `completedItems`: List of purchased items
-- **Side Effects**: Updates frequency tracking, saves to storage
-
-#### `getShoppingAnalytics()`
-Returns analytics data for the dashboard.
-- **Returns**: `Map<String, dynamic>` containing:
-  - `totalSessions`: Number of shopping trips
-  - `averageItemsPerSession`: Average items per trip
-  - `averageSpentPerSession`: Average spending per trip
-  - `mostFrequentItems`: Top 5 frequently bought items
-  - `totalSpent`: Total estimated spending
-
-### SettingsProvider
-
-Manages app settings and preferences.
-
-```dart
-class SettingsProvider extends ChangeNotifier {
-  // Settings properties
-  bool get notificationsEnabled;
-  bool get autoSync;
-  bool get confirmDeletion;
-  bool get biometricAuth;
-  String get defaultCategory;
-  String get sortBy;
-
-  // Methods
-  Future<void> loadSettings();
-  Future<void> setNotificationsEnabled(bool enabled);
-  Future<void> setAutoSync(bool enabled);
-  Future<void> setConfirmDeletion(bool enabled);
-  Future<void> setBiometricAuth(bool enabled);
-  Future<void> setDefaultCategory(String category);
-  Future<void> setSortBy(String sortOption);
-}
-```
-
-### ThemeProvider
-
-Manages app theme and appearance.
-
-```dart
-class ThemeProvider extends ChangeNotifier {
-  bool get isDarkMode;
-  ThemeData get currentTheme;
-
-  Future<void> toggleTheme();
-  Future<void> setTheme(bool isDark);
-  Future<void> loadTheme();
-}
-```
-
-## 🛠️ Services
-
-### DatabaseHelper
-
-Handles local database operations and Firebase synchronization.
-
-```dart
-class DatabaseHelper {
-  // Singleton instance
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
-
-  // Core methods
-  Future<List<GroceryItem>> getGroceryItems();
-  Future<void> addNewGroceryItem(GroceryItemData groceryItemData);
-  Future<void> updateGroceryItem(String key, String name, String category, String urgency, bool isCompleted);
-  Future<void> deleteGroceryItem(String key);
-  
-  // Sync methods
-  Future<void> syncUnsyncedItems();
-  Future<void> readFirebaseRealtimeDBMain(Function(List<GroceryItem>) productListCallback);
-  
-  // Category management
-  Future<List<Map<String, dynamic>>> getCategories();
-  Future<void> addCategory(String name, String icon);
-}
-```
-
-**Key Methods:**
-
-#### `getGroceryItems()`
-Retrieves all grocery items from local database.
-- **Returns**: `Future<List<GroceryItem>>`
-- **Usage**: Load items for display in UI
-
-#### `addNewGroceryItem(GroceryItemData groceryItemData)`
-Adds a new grocery item to both local and remote storage.
-- **Parameters**: 
-  - `groceryItemData`: Item details to add
-- **Returns**: `Future<void>`
-- **Side Effects**: Saves locally, queues for Firebase sync
-
-#### `syncUnsyncedItems()`
-Synchronizes local changes with Firebase.
-- **Returns**: `Future<void>`
-- **Usage**: Called when connectivity is restored
-
-### ConnectivityService
-
-Monitors network connectivity status.
-
-```dart
-class ConnectivityService {
-  Stream<ConnectivityResult> get onConnectivityChanged;
-  
-  Future<bool> isConnected();
-  void dispose();
-}
-```
-
-### NotificationService
-
-Manages in-app notifications.
-
-```dart
-class NotificationService extends ChangeNotifier {
-  List<AppNotification> get notifications;
-  int get unreadCount;
-
-  void addNotification(String title, String message, NotificationType type);
-  void markAsRead(String id);
-  void markAllAsRead();
-  void clearAllNotifications();
-  void removeNotification(String id);
-}
-```
-
-#### Notification Types
-```dart
-enum NotificationType {
-  info,
-  success,
-  warning,
-  error,
-  reminder,
-  alert
-}
-```
-
-### Auth
-
-Handles user authentication with Firebase.
+#### Class: `Auth`
+Handles Firebase authentication operations with enhanced error handling.
 
 ```dart
 class Auth {
-  static Future<User?> signInWithEmail(String email, String password);
-  static Future<User?> registerWithEmail(String email, String password);
-  static Future<void> signOut();
-  static Future<void> logout();
-  static User? getCurrentUser();
-  static Stream<User?> get authStateChanges;
+  static Future<UserCredential?> signInWithEmailAndPassword(String email, String password)
+  static Future<UserCredential?> createUserWithEmailAndPassword(String email, String password)
+  static Future<void> signOut()
+  static User? getCurrentUser()
+  static Stream<User?> authStateChanges()
 }
 ```
 
-### BackupService
+**Recent Updates:**
+- Enhanced error handling with user-friendly messages
+- Improved validation for email and password formats
+- Better handling of network connectivity issues
 
-Manages data backup and restoration.
+### Database Operations (`lib/Data/DatabaseHelper.dart`)
 
-```dart
-class BackupService extends ChangeNotifier {
-  bool get isBackingUp;
-  bool get autoBackupEnabled;
-  DateTime? get lastBackupTime;
-
-  Future<void> createBackup();
-  Future<void> restoreFromBackup(String filePath);
-  Future<void> setAutoBackupEnabled(bool enabled);
-}
-```
-
-## 🎨 UI Components
-
-### GroceryItemCard
-
-Displays a grocery item in the list.
+#### Class: `DatabaseHelper`
+Manages Firebase Realtime Database operations with offline support.
 
 ```dart
-class GroceryItemCard extends StatelessWidget {
-  final GroceryItem groceryItem;
-  final VoidCallback? onComplete;
-  final VoidCallback? onDelete;
-  final VoidCallback? onEdit;
-  final bool isSelected;
-
-  const GroceryItemCard({
-    Key? key,
-    required this.groceryItem,
-    this.onComplete,
-    this.onDelete,
-    this.onEdit,
-    this.isSelected = false,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context);
-}
-```
-
-### AnimatedDialog
-
-Custom dialog with animations.
-
-```dart
-class AnimatedDialog {
-  static Future<bool?> showConfirmation(
-    BuildContext context, {
-    required String title,
-    required String message,
-    String confirmText = 'Confirm',
-    String cancelText = 'Cancel',
-  });
-
-  static void showError(
-    BuildContext context, {
-    required String title,
-    required String message,
-  });
-
-  static void showSuccess(
-    BuildContext context, {
-    required String title,
-    required String message,
-  });
-
-  static void showInfo(
-    BuildContext context, {
-    required String title,
-    required String message,
-  });
-}
-```
-
-### AddItemPage
-
-Screen for adding/editing grocery items.
-
-```dart
-class AddItemPage extends StatefulWidget {
-  final GroceryItem? existingItem;
+class DatabaseHelper {
+  // CRUD Operations
+  static Future<void> addGroceryItem(GroceryItem item)
+  static Future<void> updateGroceryItem(GroceryItem item)
+  static Future<void> deleteGroceryItem(String itemId)
+  static Future<List<GroceryItem>> getGroceryItems()
   
-  const AddItemPage({Key? key, this.existingItem}) : super(key: key);
-
-  @override
-  State<AddItemPage> createState() => _AddItemPageState();
+  // Enhanced Features (Recent)
+  static Stream<List<GroceryItem>> getGroceryItemsStream()
+  static Future<List<GroceryItem>> searchItems(String query)
+  static Future<List<GroceryItem>> filterByCategory(String category)
+  static Future<void> markItemCompleted(String itemId, bool completed)
 }
 ```
 
-## 🔧 Utilities
+**Recent Improvements:**
+- Real-time data streaming for instant updates
+- Enhanced search functionality with filtering
+- Better error handling and retry mechanisms
+- Optimized queries for better performance
 
-### LocalStorageHelper
+### Local Storage (`lib/Data/LocalStorageHelper.dart`)
 
-Wrapper for SQLite database operations.
+#### Class: `LocalStorageHelper`
+Manages SQLite local database for offline functionality.
 
 ```dart
 class LocalStorageHelper {
-  Future<Database> get database;
+  // Database Management
+  static Future<Database> _getDatabase()
+  static Future<void> initializeDatabase()
   
-  // Grocery items
-  Future<int> insertGroceryItem(GroceryItem item);
-  Future<List<GroceryItem>> getAllGroceryItems();
-  Future<int> updateGroceryItem(String key, GroceryItemData itemData);
-  Future<int> deleteGroceryItem(String key);
+  // Item Operations
+  static Future<void> insertGroceryItem(GroceryItem item)
+  static Future<void> updateGroceryItem(GroceryItem item)
+  static Future<void> deleteGroceryItem(String itemId)
+  static Future<List<GroceryItem>> getAllGroceryItems()
   
-  // Categories
-  Future<List<Map<String, dynamic>>> getCategories();
-  Future<int> insertCategory(String name, String icon);
-  
-  // Utility
-  Future<List<GroceryItem>> getUnsyncedItems();
-  Future<GroceryItem?> getGroceryItemByKey(String key);
+  // Sync Operations
+  static Future<void> syncWithFirebase()
+  static Future<bool> hasUnsyncedData()
 }
 ```
 
-### Constants
+### Data Models (`lib/Data/DataModel.dart`)
 
-App-wide constants and configuration.
+#### Class: `GroceryItem`
+Enhanced data model with additional properties.
 
 ```dart
-class AppConstants {
-  // Firebase collections
-  static const String USERS_COLLECTION = 'users';
-  static const String GROCERY_ITEMS_COLLECTION = 'grocery_items';
+class GroceryItem {
+  String id;
+  String name;
+  String category;      // Enhanced with colorful categories
+  String urgency;       // Low, Medium, High with color coding
+  bool isCompleted;
+  DateTime createdAt;
+  DateTime? updatedAt;
+  String? notes;        // New: Additional notes
+  String? userId;       // Enhanced: User association
+  bool isLocal;         // New: Offline indicator
   
-  // Local storage keys
-  static const String THEME_KEY = 'theme_preference';
-  static const String SETTINGS_KEY = 'app_settings';
-  
-  // Default values
-  static const String DEFAULT_CATEGORY = 'Other';
-  static const String DEFAULT_URGENCY = 'Medium';
-  
-  // UI constants
-  static const double CARD_BORDER_RADIUS = 12.0;
-  static const double PADDING_STANDARD = 16.0;
+  // Methods
+  Map<String, dynamic> toMap()
+  static GroceryItem fromMap(Map<String, dynamic> map)
+  GroceryItem copyWith({...})  // Enhanced for immutability
 }
 ```
 
-## 📊 Error Handling
+**Recent Enhancements:**
+- Added `notes` field for additional item information
+- Enhanced `category` with visual color coding
+- Added `isLocal` flag for offline state management
+- Improved `copyWith` method for better state management
 
-### Exception Types
+## 🎨 UI Components (Modernized July 2025)
+
+### Home Screen (`lib/Screens/Home.dart`)
+
+#### Class: `_HomeState`
+Main application screen with Material Design 3 implementation.
 
 ```dart
-class DatabaseException implements Exception {
-  final String message;
-  final dynamic originalException;
+class _HomeState extends State<Home> {
+  // Enhanced Search & Filter
+  void _performSearch(String query)
+  void _filterByCategory(String category)
+  void _filterByUrgency(String urgency)
+  void _clearFilters()
   
-  DatabaseException(this.message, [this.originalException]);
-}
-
-class NetworkException implements Exception {
-  final String message;
-  final int? statusCode;
+  // Item Management (Enhanced)
+  Future<void> _addItem()
+  Future<void> _editItem(GroceryItem item)
+  Future<void> _deleteItem(String itemId)  // With confirmation
+  Future<void> _toggleItemCompleted(GroceryItem item)
   
-  NetworkException(this.message, [this.statusCode]);
-}
-
-class AuthException implements Exception {
-  final String message;
-  final String? code;
-  
-  AuthException(this.message, [this.code]);
+  // UI State Management
+  void _toggleDrawer()
+  void _refreshData()
+  void _handleEmptyState()  // New: Empty state handling
 }
 ```
 
-### Error Handling Pattern
+**Recent UI Improvements:**
+- Material Design 3 theming with dynamic colors
+- Enhanced search with real-time filtering
+- Improved empty state with call-to-action
+- Fixed RenderFlex overflow issues
+- Better responsive layout for all screen sizes
+
+### Grocery Item Card (`lib/Reusable/GroceryItemCard.dart`)
+
+#### Class: `GroceryItemCard`
+Modernized item display component with swipe actions.
 
 ```dart
-Future<Result<T>> performOperation<T>() async {
-  try {
-    final result = await someAsyncOperation();
-    return Success(result);
-  } on DatabaseException catch (e) {
-    return Failure('Database error: ${e.message}');
-  } on NetworkException catch (e) {
-    return Failure('Network error: ${e.message}');
-  } catch (e) {
-    return Failure('Unexpected error: $e');
-  }
-}
-```
-
-## 🔐 Security Considerations
-
-### Data Validation
-
-```dart
-class Validators {
-  static String? validateEmail(String? email) {
-    if (email == null || email.isEmpty) {
-      return 'Email is required';
-    }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
-
-  static String? validatePassword(String? password) {
-    if (password == null || password.isEmpty) {
-      return 'Password is required';
-    }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
-  }
-
-  static String? validateItemName(String? name) {
-    if (name == null || name.trim().isEmpty) {
-      return 'Item name is required';
-    }
-    if (name.trim().length > 100) {
-      return 'Item name too long';
-    }
-    return null;
-  }
-}
-```
-
-## 🚀 Performance Tips
-
-### Efficient Widget Building
-
-```dart
-// Use const constructors
-const Text('Static text');
-
-// Use Builder widgets to limit rebuild scope
-Consumer<GroceryProvider>(
-  builder: (context, provider, child) {
-    return Text('${provider.itemCount} items');
-  },
-);
-
-// Cache expensive computations
-class ExpensiveWidget extends StatefulWidget {
-  @override
-  State<ExpensiveWidget> createState() => _ExpensiveWidgetState();
-}
-
-class _ExpensiveWidgetState extends State<ExpensiveWidget> {
-  late final String _cachedValue = expensiveComputation();
+class GroceryItemCard extends StatelessWidget {
+  final GroceryItem item;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final ValueChanged<bool> onToggleCompleted;
   
-  @override
-  Widget build(BuildContext context) {
-    return Text(_cachedValue);
-  }
+  // Enhanced Features
+  Widget _buildCategoryIcon()     // New: Colorful category icons
+  Widget _buildUrgencyIndicator() // Enhanced: Color-coded urgency
+  Widget _buildSwipeActions()     // New: Swipe-to-delete
+  Widget _buildItemContent()      // Improved: Better layout
 }
 ```
 
-### Database Optimization
+**Design Updates:**
+- Minimalist card design with better spacing
+- Colorful category icons for visual identification
+- Swipe-to-delete with confirmation dialog
+- Improved typography and color scheme
+- Better accessibility support
+
+### Add Item Page (`lib/Reusable/AddItemPage.dart`)
+
+#### Class: `_AddItemPageState`
+Enhanced form for adding grocery items.
 
 ```dart
-// Use transactions for multiple operations
-await database.transaction((txn) async {
-  for (final item in items) {
-    await txn.insert('grocery_items', item.toJson());
-  }
-});
-
-// Use batch operations
-final batch = database.batch();
-for (final item in items) {
-  batch.insert('grocery_items', item.toJson());
+class _AddItemPageState extends State<AddItemPage> {
+  // Form Management (Enhanced)
+  final GlobalKey<FormState> _formKey
+  final TextEditingController _nameController
+  final TextEditingController _notesController  // New
+  
+  // Validation (Improved)
+  String? _validateItemName(String? value)
+  String? _validateCategory(String? value)
+  
+  // UI Helpers
+  Widget _buildNameField()       // Enhanced validation
+  Widget _buildCategoryDropdown() // Visual category selection
+  Widget _buildUrgencySelector() // Color-coded urgency
+  Widget _buildNotesField()      // New: Optional notes
+  Widget _buildSaveButton()      // Improved styling
 }
-await batch.commit();
 ```
+
+**Form Improvements:**
+- Better input validation with real-time feedback
+- Visual category selection with icons
+- Enhanced layout preventing overflow issues
+- Added notes field for additional information
+- Improved button styling and interactions
+
+## 🔧 Services & Providers
+
+### Theme Provider (`lib/Data/ThemeProvider.dart`)
+
+#### Class: `ThemeProvider`
+Manages application theming with Material Design 3.
+
+```dart
+class ThemeProvider extends ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.system;
+  
+  // Theme Management
+  ThemeMode get themeMode => _themeMode;
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
+  
+  // Actions
+  Future<void> setThemeMode(ThemeMode mode)
+  Future<void> toggleTheme()
+  ThemeData get lightTheme  // Material 3 light theme
+  ThemeData get darkTheme   // Material 3 dark theme
+}
+```
+
+### Connectivity Service (`lib/Data/ConnectivityService.dart`)
+
+#### Class: `ConnectivityService`
+Enhanced network monitoring with auto-sync capabilities.
+
+```dart
+class ConnectivityService {
+  static Stream<ConnectivityResult> get connectivityStream
+  static Future<bool> isConnected()
+  static Future<void> handleConnectivityChange(bool isConnected)
+  
+  // Auto-sync Features (New)
+  static Future<void> syncWhenOnline()
+  static void showConnectionStatus(BuildContext context)
+}
+```
+
+### Notification Service (`lib/Data/NotificationService.dart`)
+
+#### Class: `NotificationService`
+In-app notification system with history tracking.
+
+```dart
+class NotificationService extends ChangeNotifier {
+  List<AppNotification> _notifications = [];
+  
+  // Notification Management
+  void showNotification(String message, NotificationType type)
+  void markAsRead(String notificationId)
+  void clearAll()
+  
+  // History
+  List<AppNotification> get notifications => _notifications;
+  int get unreadCount => _notifications.where((n) => !n.isRead).length;
+}
+```
+
+## 🏗️ Build Configuration (Updated July 2025)
+
+### Android Build Settings
+Recent updates to support latest Android toolchain:
+
+```gradle
+// android/app/build.gradle
+android {
+    compileSdk = 35                    // Android 15 support
+    ndkVersion = "27.0.12077973"       // Firebase compatible
+    
+    defaultConfig {
+        minSdkVersion 23               // Android 6.0+
+        targetSdk = flutter.targetSdkVersion
+    }
+    
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17  // Java 17 LTS
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    
+    kotlinOptions {
+        jvmTarget = '17'               // Kotlin targeting Java 17
+    }
+}
+```
+
+### Dependencies (pubspec.yaml)
+Key dependencies with current versions:
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^3.6.0           # Enhanced: Latest Firebase
+  firebase_auth: ^5.3.1           # Enhanced: Auth improvements
+  firebase_database: ^11.1.4      # Enhanced: Database optimizations
+  sqflite: ^2.3.0                 # Enhanced: Local storage
+  provider: ^6.1.2                # State management
+  connectivity_plus: ^4.0.2       # Network monitoring
+  shared_preferences: ^2.2.2      # Local preferences
+```
+
+## 🧪 Testing APIs
+
+### Test Utilities
+Enhanced testing support for UI components:
+
+```dart
+// test/widget_test.dart
+class TestUtils {
+  static Widget createTestWidget(Widget child)
+  static Future<void> pumpAndSettle(WidgetTester tester)
+  static Future<void> enterText(WidgetTester tester, String text)
+  static Future<void> tapButton(WidgetTester tester, String buttonText)
+}
+```
+
+## 🔒 Security & Privacy
+
+### Data Protection
+- All sensitive data encrypted in local storage
+- Firebase security rules properly configured
+- User authentication required for all operations
+- No personal data stored without explicit consent
+
+### Privacy Features
+- Local data backup with user control
+- Option to delete all user data
+- Transparent data usage policies
+- No third-party analytics without permission
 
 ---
 
-**Note**: This API reference covers the main components as of version 0.3.0. For the most up-to-date information, always refer to the source code and inline documentation.
-
-**Last Updated**: July 7, 2025
+**Last Updated**: July 8, 2025
+**Version**: 0.4.0
+**Flutter Version**: 3.32.5+
+**Android Target**: API 35 (Android 15)

@@ -1,23 +1,49 @@
 # Home Grocery App Documentation
 
-Welcome to the Home Grocery App documentation! This folder contains all the documentation for the Flutter-based grocery list management application.
+Welcome to the Home Grocery App documentation! This folder contains comprehensive documentation for the Flutter-based grocery list management application with Material Design 3.
 
 ## 📁 Documentation Structure
 
 ### Core Documentation
-- **[Project Overview](project-overview.md)** - High-level overview of the app
+- **[Project Overview](project-overview.md)** - High-level overview with recent modernization updates
 - **[Architecture](architecture.md)** - Technical architecture and design patterns
-- **[Setup Guide](setup-guide.md)** - How to set up and run the project
-- **[API Reference](api-reference.md)** - Documentation of key classes and methods
+- **[Setup Guide](setup-guide.md)** - Complete setup with latest build system requirements
+- **[API Reference](api-reference.md)** - Updated documentation of classes and methods
 
 ### Development Documentation
-- **[Development Guide](development-guide.md)** - Guidelines for contributing to the project
-- **[Changelog](changelog.md)** - Version history and changes
-- **[Known Issues](known-issues.md)** - Current bugs and limitations
-- **[Restructure Guide](restructure-guide.md)** - Information about project restructuring
+- **[Development Guide](development-guide.md)** - Guidelines with latest build tools and practices
+- **[Changelog](changelog.md)** - Comprehensive version history including July 2025 updates
+- **[User Guide](user-guide.md)** - How to use all app features
 
-### User Documentation
-- **[User Guide](user-guide.md)** - How to use the app
+## 🚀 Recent Major Updates (July 2025)
+
+### 🎨 UI/UX Modernization
+- **Material Design 3**: Complete overhaul with latest Material You theming
+- **Enhanced Home Screen**: Modern search, filters, and responsive layout
+- **Redesigned Item Cards**: Minimalist design with swipe-to-delete functionality
+- **Fixed Layout Issues**: Resolved RenderFlex overflow and sizing errors
+- **Improved Navigation**: Beautiful sidebar with user profile integration
+
+### 🔧 Build System Improvements
+- **Android Gradle Plugin**: Updated to 8.7.2 (latest stable)
+- **Kotlin**: Updated to 1.9.25 for better compatibility
+- **SDK Support**: Android 15 (API 35) with NDK 27.0.12077973
+- **Build Warnings**: Resolved SDK XML version and deprecated API warnings
+- **Performance**: Optimized build times and reduced compilation errors
+
+### 🐛 Critical Bug Fixes
+- Fixed persistent layout and overflow errors across all screens
+- Resolved "Cannot hit test a render box with no size" errors
+- Enhanced error handling with user-friendly messages
+- Improved form validation and input handling
+- Better offline/online state management
+
+### 📱 Feature Enhancements
+- **Swipe Actions**: Intuitive swipe-to-delete with confirmation dialogs
+- **Enhanced Search**: Real-time search with instant filtering
+- **Visual Categories**: Colorful category icons for better organization
+- **Responsive Design**: Optimized for all screen sizes and orientations
+- **Performance**: Faster app startup and smoother animations
 - **[Feature List](features.md)** - Complete list of app features
 
 ### Technical Documentation

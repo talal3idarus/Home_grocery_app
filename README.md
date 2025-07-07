@@ -1,6 +1,30 @@
 # Home Grocery App 🛒
 
-A modern, feature-rich Flutter grocery management application with offline support, analytics, notifications, and comprehensive user experience features.
+A modern### UI/UX Enhancements (Recent Updates)
+- **Modern Home Screen**: Material 3 design with improved search and filtering
+- **Minimalist Item Cards**: Clean grocery item display with swipe-to-delete
+- **Enhanced Add Item Page**: Robust form validation and better user experience
+- **Responsive Layout**: Fixed overflow issues and improved mobile layout
+- **Colorful Category Icons**: Visual category identification with modern icons
+- **Smooth Navigation**: Elegant sidebar with user profile and quick access
+- **Loading States**: Beautiful loading animations and empty state messages
+
+### Advanced Features
+- **Shopping Analytics**: Track shopping history, spending, and patterns
+- **Smart Notifications**: In-app notification system with history tracking
+- **Data Backup & Restore**: Local backup functionality with export/import
+- **Theme Customization**: Dark/light themes with system preference support
+- **Settings Management**: Comprehensive app configuration options
+- **Connectivity Monitoring**: Smart offline/online detection with sync status
+
+### Recent Bug Fixes & Improvements
+- 🐛 **Fixed RenderFlex overflow errors** in search and empty states
+- 🐛 **Resolved "Cannot hit test a render box with no size" errors**
+- 🐛 **Fixed persistent layout issues** in AddItemPage and item cards
+- 🔧 **Improved build system** with latest Android toolchain
+- 🔧 **Enhanced error handling** and user feedback
+- 🎨 **Updated Material Design** components and theming
+- ⚡ **Performance optimizations** for smoother animationsure-rich Flutter grocery management application with Material Design 3, offline support, analytics, notifications, and comprehensive user experience features.
 
 ## 📖 Documentation
 
@@ -10,38 +34,43 @@ A modern, feature-rich Flutter grocery management application with offline suppo
 - 🏗️ **[Architecture](./doc/architecture.md)** - Technical architecture and design patterns  
 - 🚀 **[Setup Guide](./doc/setup-guide.md)** - Complete installation and setup instructions
 - 👤 **[User Guide](./doc/user-guide.md)** - How to use all app features
-- 📝 **[Changelog](./doc/changelog.md)** - Version history and updates
-- 🐛 **[Known Issues](./doc/known-issues.md)** - Current bugs and limitations
+- �‍💻 **[Development Guide](./doc/development-guide.md)** - Developer information and build instructions
+- 📚 **[API Reference](./doc/api-reference.md)** - Code documentation and API details
+- � **[Changelog](./doc/changelog.md)** - Version history and recent updates
 
 ## 🌟 Features Overview
 
 ### Core Functionality
 - **User Authentication**: Secure login, registration with Firebase Auth
-- **Grocery Management**: Add, edit, delete, and organize grocery items
-- **Categories & Urgency**: Organize items with categories and priority levels
-- **Search & Filter**: Advanced search and filtering capabilities
-- **Offline Support**: Full offline functionality with automatic sync
+- **Grocery Management**: Add, edit, delete, and organize grocery items with swipe gestures
+- **Categories & Urgency**: Organize items with colorful categories and priority levels
+- **Search & Filter**: Advanced search and filtering capabilities with real-time results
+- **Offline Support**: Full offline functionality with automatic sync when online
+
+### Modern UI/UX (Recently Updated)
+- **Material Design 3**: Latest Material You theming with dynamic colors
+- **Responsive Layout**: Adaptive design optimized for all screen sizes
+- **Swipe Actions**: Intuitive swipe-to-delete with confirmation dialogs
+- **Minimalist Cards**: Clean, modern grocery item cards with category icons
+- **Smooth Animations**: Enhanced user experience with fluid transitions
+- **Modern Sidebar**: Beautiful navigation drawer with user info and quick actions
 
 ### Advanced Features
 - **Shopping Analytics**: Track shopping history, spending, and patterns
-- **Smart Notifications**: In-app notification system with history
+- **Smart Notifications**: In-app notification system with history tracking
 - **Data Backup**: Local backup and restore functionality
 - **Theme Customization**: Dark/light themes with system preference support
 - **Settings Management**: Comprehensive app configuration options
-
-### User Experience
-- **Material Design**: Modern UI following Material Design principles
-- **Responsive Layout**: Adaptive design for different screen sizes
-- **Smooth Animations**: Enhanced user experience with fluid transitions
-- **Accessibility**: Support for accessibility features and screen readers
-- **Performance**: Optimized for speed and efficient resource usage
+- **Connectivity Monitoring**: Smart offline/online status with auto-sync
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Flutter SDK (3.0+)
-- Firebase project
-- Android Studio or VS Code
+- **Flutter SDK**: 3.32.5+ (Latest stable)
+- **Dart**: 3.8.1+
+- **Android**: SDK 35, NDK 27.0.12077973
+- **Firebase Project**: For authentication and database
+- **Development IDE**: Android Studio or VS Code
 
 ### Installation
 ```bash
@@ -51,14 +80,40 @@ flutter pub get
 ```
 
 **For detailed setup instructions, see the [Setup Guide](./doc/setup-guide.md)**
-   - Add Android app to your Firebase project
-   - Download `google-services.json` and place it in `android/app/`
-   - Enable Authentication and Realtime Database in Firebase Console
 
-4. **Run the app**
-   ```bash
-   flutter run
-   ```
+## 🏗️ Build System (Recently Updated)
+
+### Android Configuration
+- **Android Gradle Plugin**: 8.7.2 (Latest)
+- **Kotlin**: 1.9.25 (Stable)
+- **Gradle**: 8.11.1
+- **Compile SDK**: 35 (Android 15)
+- **Target SDK**: Latest Flutter target
+- **Min SDK**: 23 (Android 6.0+)
+- **NDK**: 27.0.12077973 (Required for Firebase)
+- **Java**: Version 17 (LTS)
+
+### Recent Build Improvements
+- ✅ **Resolved SDK XML version warnings** - Updated to latest Android toolchain
+- ✅ **Fixed deprecated API warnings** - Proper compiler configurations
+- ✅ **Eliminated Kotlin compilation errors** - Stable Kotlin version with proper cache management
+- ✅ **NDK version compatibility** - Updated to match Firebase plugin requirements
+- ✅ **Build performance optimized** - Faster builds with improved caching
+
+### Quick Build Commands
+```bash
+# Clean build (recommended after updates)
+flutter clean && flutter pub get
+
+# Debug build
+flutter build apk --debug
+
+# Release build
+flutter build apk --release
+
+# Check for issues
+flutter analyze
+flutter doctor -v
 
 ## 📱 App Architecture
 
