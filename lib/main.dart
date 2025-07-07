@@ -3,16 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 
-// Feature imports using the new structure
-import 'features/auth/auth.dart';
-import 'features/grocery/grocery.dart';
-import 'features/settings/settings.dart';
-import 'features/notifications/notifications.dart';
-import 'core/core.dart';
+// Data layer imports
+import 'Data/ThemeProvider.dart';
+import 'Data/SettingsProvider.dart';
+import 'Data/HistoryProvider.dart';
+import 'Data/NotificationService.dart';
+import 'Data/BackupService.dart';
+
+// Screen imports
+import 'Screens/Home.dart';
+import 'Screens/Login.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Initialize Firebase
+  await Firebase.initializeApp();
   runApp(
     MultiProvider(
       providers: [
@@ -39,12 +43,12 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: AppConstants.appName,
+          title: 'Home Grocery App',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.lightTheme,
           darkTheme: themeProvider.darkTheme,
           themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: AuthCheck(), // Redirect based on authentication state
+          home: AuthCheck(),
         );
       },
     );
