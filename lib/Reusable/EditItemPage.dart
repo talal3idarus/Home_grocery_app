@@ -94,90 +94,183 @@ class _EditItemPageState extends State<EditItemPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Item')),
+      appBar: AppBar(
+        title: const Text('Edit Item'),
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {
+              // Reset to original values
+              _nameController.text = widget.item.itemData?.name ?? '';
+              _quantityController.text = widget.item.itemData?.quantity.toString() ?? '';
+              _tagsController.text = widget.item.itemData?.tags?.join(', ') ?? '';
+              setState(() {
+                _selectedUrgency = widget.item.itemData?.urgency ?? 'Low';
+                _selectedCategory = widget.item.itemData?.category;
+              });
+            },
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset Form',
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Item Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _quantityController,
-              decoration: const InputDecoration(
-                labelText: 'Quantity',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: _tagsController,
-              decoration: const InputDecoration(
-                labelText: 'Tags (comma separated)',
-                border: OutlineInputBorder(),
-                hintText: 'organic, healthy, sale',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            if (_categories.isNotEmpty)
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue;
-                  });
-                },
-                items: _categories.map<DropdownMenuItem<String>>((category) {
-                  return DropdownMenuItem<String>(
-                    value: category['name'],
-                    child: Row(
-                      children: [
-                        Text(category['icon'] ?? '📦'),
-                        const SizedBox(width: 8),
-                        Text(category['name']),
-                      ],
+            Expanded(
+              child: ListView(
+                children: [
+                  // Form Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Item Details',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Item Name
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Item Name',
+                              hintText: 'e.g., Milk, Bread, Apples...',
+                              prefixIcon: Icon(Icons.label),
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Quantity
+                          TextFormField(
+                            controller: _quantityController,
+                            decoration: const InputDecoration(
+                              labelText: 'Quantity',
+                              hintText: 'Enter number',
+                              prefixIcon: Icon(Icons.numbers),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Tags
+                          TextFormField(
+                            controller: _tagsController,
+                            decoration: const InputDecoration(
+                              labelText: 'Tags (optional)',
+                              hintText: 'organic, healthy, sale...',
+                              prefixIcon: Icon(Icons.tag),
+                              border: OutlineInputBorder(),
+                              helperText: 'Separate with commas',
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 24),
+                          
+                          Text(
+                            'Classification',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Category Dropdown
+                          if (_categories.isNotEmpty)
+                            DropdownButtonFormField<String>(
+                              value: _selectedCategory,
+                              decoration: const InputDecoration(
+                                labelText: 'Category',
+                                prefixIcon: Icon(Icons.category),
+                                border: OutlineInputBorder(),
+                              ),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedCategory = newValue;
+                                });
+                              },
+                              items: _categories.map<DropdownMenuItem<String>>((category) {
+                                return DropdownMenuItem<String>(
+                                  value: category['name'],
+                                  child: Text('${category['icon'] ?? '📦'} ${category['name']}'),
+                                );
+                              }).toList(),
+                            ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Priority Dropdown
+                          DropdownButtonFormField<String>(
+                            value: _selectedUrgency,
+                            decoration: const InputDecoration(
+                              labelText: 'Priority Level',
+                              prefixIcon: Icon(Icons.priority_high),
+                              border: OutlineInputBorder(),
+                            ),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedUrgency = newValue!;
+                              });
+                            },
+                            items: const [
+                              DropdownMenuItem<String>(
+                                value: 'Low',
+                                child: Text('🟢 Low Priority'),
+                              ),
+                              DropdownMenuItem<String>(
+                                value: 'Medium',
+                                child: Text('🟡 Medium Priority'),
+                              ),
+                              DropdownMenuItem<String>(
+                                value: 'High',
+                                child: Text('🔴 High Priority'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                ],
               ),
-            const SizedBox(height: 16.0),
-            DropdownButtonFormField<String>(
-              value: _selectedUrgency,
-              decoration: const InputDecoration(
-                labelText: 'Urgency',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedUrgency = newValue!;
-                });
-              },
-              items: <String>['Low', 'Medium', 'High']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
             ),
-            const SizedBox(height: 32.0),
-            ElevatedButton(
-              onPressed: _updateItem,
-              child: const Text('Update Item'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
+            
+            // Update Button (Fixed at bottom)
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: _updateItem,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Update Item'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

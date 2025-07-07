@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../Data/DatabaseHelper.dart';
 import '../Data/DataModel.dart';
 import '../Data/Auth.dart';
-import '../Data/HistoryProvider.dart';
 import '../Data/ThemeProvider.dart';
 import '../Data/ConnectivityService.dart';
 import '../Reusable/GroceryItemCard.dart';
@@ -89,15 +88,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchGroceryItems() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
     });
     
     _databaseHelper.readFirebaseRealtimeDBMain((List<GroceryItem> items) {
-      setState(() {
-        _productList = items;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _productList = items;
+          _isLoading = false;
+        });
+      }
     });
   }
 
@@ -118,9 +121,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Future<void> _loadCategories() async {
     try {
       List<Map<String, dynamic>> categories = await _databaseHelper.getCategories();
-      setState(() {
-        _categories = categories;
-      });
+      if (mounted) {
+        setState(() {
+          _categories = categories;
+        });
+      }
     } catch (e) {
       // Error loading categories - using empty list
     }
@@ -133,7 +138,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       bool matchesUrgency = _selectedUrgency == null || item.itemData?.urgency == _selectedUrgency;
       bool matchesCategory = _selectedCategory == null || item.itemData?.category == _selectedCategory;
       
-      return matchesSearch && matchesUrgency && matchesCategory && !(item.itemData?.isCompleted ?? false);
+      return matchesSearch && matchesUrgency && matchesCategory;
     }).toList();
   }
 
@@ -179,28 +184,72 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         backgroundColor: colorScheme.surface,
         foregroundColor: colorScheme.onSurface,
         surfaceTintColor: Colors.transparent,
-        title: const Text(
-          'Home Grocery',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 22,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          if (!_isConnected)
+        title: Row(
+          children: [
             Icon(
-              Icons.wifi_off,
-              color: colorScheme.error,
+              Icons.shopping_cart_rounded,
+              color: colorScheme.primary,
+              size: 24,
             ),
-          const SizedBox(width: 8),
+            const SizedBox(width: 8),
+            const Text(
+              'Home Grocery',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          // Connectivity Status Indicator
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _isConnected 
+                  ? Colors.green.withOpacity(0.1) 
+                  : Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _isConnected ? Colors.green : Colors.red,
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _isConnected ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+                  color: _isConnected ? Colors.green : Colors.red,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _isConnected ? 'Online' : 'Offline',
+                  style: TextStyle(
+                    color: _isConnected ? Colors.green : Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Animated Refresh Button
           AnimatedBuilder(
             animation: _refreshAnimation,
             builder: (context, child) {
               return Transform.rotate(
                 angle: _refreshAnimation.value * 2 * 3.14159, // Full rotation
                 child: IconButton(
-                  icon: const Icon(Icons.refresh),
+                  icon: Icon(
+                    Icons.refresh_rounded,
+                    color: _isLoading 
+                        ? colorScheme.onSurfaceVariant.withOpacity(0.5)
+                        : colorScheme.primary,
+                  ),
                   tooltip: 'Refresh',
                   onPressed: _isLoading ? null : _refreshData,
                 ),
@@ -226,13 +275,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToAddItemPage,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Item'),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        elevation: 6,
+      floatingActionButton: TweenAnimationBuilder<double>(
+        duration: const Duration(milliseconds: 800),
+        tween: Tween(begin: 0.0, end: 1.0),
+        builder: (context, value, child) {
+          return Transform.scale(
+            scale: value,
+            child: FloatingActionButton.extended(
+              onPressed: _navigateToAddItemPage,
+              backgroundColor: colorScheme.primaryContainer,
+              foregroundColor: colorScheme.onPrimaryContainer,
+              elevation: 8,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text(
+                'Add Item',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -510,21 +574,49 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
       child: Column(
         children: [
-          // Search Bar
+          
+          // Search Bar with enhanced design
           Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               color: colorScheme.surfaceContainerHighest,
+              border: Border.all(
+                color: colorScheme.outline.withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Search grocery items...',
                 hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                prefixIcon: Icon(Icons.search, color: colorScheme.onSurfaceVariant),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: colorScheme.primary,
+                  size: 24,
+                ),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.clear_rounded,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = "";
+                          });
+                        },
+                      )
+                    : Icon(
+                        Icons.tune_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
-              style: TextStyle(color: colorScheme.onSurface),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 16,
+              ),
               onChanged: (value) {
                 setState(() {
                   _searchQuery = value;
@@ -535,85 +627,149 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           
           const SizedBox(height: 16),
           
-          // Urgency Filter
+          // Priority Filter with dropdown
           Row(
             children: [
+              Icon(
+                Icons.priority_high_rounded,
+                color: colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
               Text(
                 'Priority:',
                 style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                  fontSize: 16,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildUrgencyChip('Low', Colors.green),
-                      const SizedBox(width: 8),
-                      _buildUrgencyChip('Medium', Colors.orange),
-                      const SizedBox(width: 8),
-                      _buildUrgencyChip('High', Colors.red),
-                      const SizedBox(width: 8),
-                      _buildClearFiltersChip(),
-                    ],
+                child: Container(
+                  height: 40,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: colorScheme.surfaceContainerHighest,
+                    border: Border.all(
+                      color: colorScheme.outline.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: _selectedUrgency,
+                      hint: Text(
+                        'Select Priority',
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 14,
+                        ),
+                      ),
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      isExpanded: true,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 14,
+                      ),
+                      dropdownColor: colorScheme.surfaceContainerHighest,
+                      items: [
+                        DropdownMenuItem<String>(
+                          value: null,
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.clear_all_rounded,
+                                size: 16,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'All Priorities',
+                                style: TextStyle(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: 'Low',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 16,
+                                color: Colors.green,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Low Priority',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: 'Medium',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.remove_rounded,
+                                size: 16,
+                                color: Colors.orange,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Medium Priority',
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: 'High',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.keyboard_arrow_up_rounded,
+                                size: 16,
+                                color: Colors.red,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'High Priority',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      onChanged: (String? value) {
+                        setState(() {
+                          _selectedUrgency = value;
+                        });
+                      },
+                    ),
                   ),
                 ),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildUrgencyChip(String urgency, Color color) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    bool isSelected = _selectedUrgency == urgency;
-    
-    return FilterChip(
-      label: Text(urgency),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _selectedUrgency = selected ? urgency : null;
-        });
-      },
-      backgroundColor: colorScheme.surfaceContainerHighest,
-      selectedColor: color.withOpacity(0.2),
-      checkmarkColor: color,
-      labelStyle: TextStyle(
-        color: isSelected ? color : colorScheme.onSurfaceVariant,
-        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? color : Colors.transparent,
-        width: 1.5,
-      ),
-    );
-  }
-
-  Widget _buildClearFiltersChip() {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    bool hasFilters = _selectedUrgency != null || _selectedCategory != null;
-    
-    if (!hasFilters) return const SizedBox.shrink();
-    
-    return ActionChip(
-      label: const Text('Clear'),
-      onPressed: () {
-        setState(() {
-          _selectedUrgency = null;
-          _selectedCategory = null;
-        });
-      },
-      backgroundColor: colorScheme.errorContainer,
-      labelStyle: TextStyle(
-        color: colorScheme.onErrorContainer,
       ),
     );
   }
@@ -630,27 +786,71 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         itemCount: _categories.length + 1,
         itemBuilder: (context, index) {
           if (index == 0) {
-            return _buildCategoryChip('All', null);
+            return _buildCategoryChip('All', '📦');
           }
           
           final category = _categories[index - 1];
           return _buildCategoryChip(
-            category['name'],
-            Color(int.parse(category['color'].substring(1), radix: 16) + 0xFF000000),
+            category['name'], 
+            category['icon'] ?? '🏷️',
           );
         },
       ),
     );
   }
 
-  Widget _buildCategoryChip(String name, Color? color) {
+  Widget _buildCategoryChip(String name, String? emoji) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     bool isSelected = (_selectedCategory == name) || (name == 'All' && _selectedCategory == null);
     
+    // Get category-specific colorful icon color for background and border
+    Color getIconColor() {
+      switch (name.toLowerCase()) {
+        case 'all':
+          return colorScheme.primary;
+        case 'dairy':
+          return Colors.blue;
+        case 'meat':
+          return Colors.red;
+        case 'vegetables':
+          return Colors.green;
+        case 'fruits':
+          return Colors.orange;
+        case 'snacks':
+          return Colors.amber;
+        case 'beverages':
+          return Colors.brown;
+        case 'household':
+          return Colors.purple;
+        case 'personal care':
+          return Colors.pink;
+        case 'frozen':
+          return Colors.lightBlue;
+        case 'bakery':
+          return Colors.deepOrange;
+        default:
+          return Colors.grey;
+      }
+    }
+    
     return Container(
       margin: const EdgeInsets.only(right: 8),
       child: FilterChip(
+        avatar: Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: getIconColor().withOpacity(isSelected ? 0.2 : 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              emoji ?? (name == 'All' ? '📦' : '🏷️'),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        ),
         label: Text(name),
         selected: isSelected,
         onSelected: (selected) {
@@ -659,17 +859,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           });
         },
         backgroundColor: colorScheme.surfaceContainerHighest,
-        selectedColor: color?.withOpacity(0.2) ?? colorScheme.primaryContainer,
-        checkmarkColor: color ?? colorScheme.primary,
+        selectedColor: getIconColor().withOpacity(0.15),
+        checkmarkColor: getIconColor(),
         labelStyle: TextStyle(
           color: isSelected 
-              ? (color ?? colorScheme.primary)
+              ? getIconColor()
               : colorScheme.onSurfaceVariant,
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
         side: BorderSide(
           color: isSelected 
-              ? (color ?? colorScheme.primary)
+              ? getIconColor()
               : Colors.transparent,
           width: 1.5,
         ),
@@ -678,63 +878,210 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildLoadingState() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text(
-            'Loading your grocery items...',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 16,
-            ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+          // Animated loading container
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 1500),
+            tween: Tween(begin: 0.0, end: 1.0),
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: 0.8 + (0.2 * value),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        Icons.shopping_cart_rounded,
+                        color: colorScheme.primary,
+                        size: 24,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Loading text with typewriter effect
+          TweenAnimationBuilder<int>(
+            duration: const Duration(milliseconds: 2000),
+            tween: IntTween(begin: 0, end: 'Loading your grocery items...'.length),
+            builder: (context, value, child) {
+              return Text(
+                'Loading your grocery items...'.substring(0, value),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              );
+            },
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Pulsing dots
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(3, (index) {
+              return TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 800 + (index * 200)),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(value),
+                      shape: BoxShape.circle,
+                    ),
+                  );
+                },
+              );
+            }),
           ),
         ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          SizedBox(height: 16),
-          Text(
-            'No items found',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[600],
+            // Animated Icon
+            TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 1500),
+              tween: Tween(begin: 0.0, end: 1.0),
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: 0.8 + (0.2 * value),
+                  child: Opacity(
+                    opacity: value,
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        (_searchQuery.isNotEmpty || _selectedUrgency != null || _selectedCategory != null)
+                            ? Icons.search_off_rounded
+                            : Icons.shopping_cart_outlined,
+                        size: 64,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-          SizedBox(height: 8),
-          Text(
-            _searchQuery.isNotEmpty 
-                ? 'Try adjusting your search'
-                : 'Add your first grocery item',
-            style: TextStyle(
-              color: Colors.grey[500],
+            
+            const SizedBox(height: 24),
+            
+            // Title
+            Text(
+              (_searchQuery.isNotEmpty || _selectedUrgency != null || _selectedCategory != null)
+                  ? 'No items found'
+                  : 'Your grocery list is empty',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-          SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _navigateToAddItemPage,
-            icon: Icon(Icons.add),
-            label: Text('Add Item'),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            
+            const SizedBox(height: 8),
+            
+            // Subtitle
+            Text(
+              (_searchQuery.isNotEmpty || _selectedUrgency != null || _selectedCategory != null)
+                  ? 'Try adjusting your search terms or filters'
+                  : 'Start by adding your first grocery item',
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-        ],
-      ),
+            
+            const SizedBox(height: 32),
+            
+            // Action buttons
+            if (_searchQuery.isNotEmpty || _selectedUrgency != null || _selectedCategory != null) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _searchQuery = "";
+                        _selectedUrgency = null;
+                        _selectedCategory = null;
+                      });
+                    },
+                    icon: const Icon(Icons.clear_all_rounded),
+                    label: const Text('Clear Filters'),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: _navigateToAddItemPage,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('Add Item'),
+                  ),
+                ],
+              ),
+            ] else ...[
+              ElevatedButton.icon(
+                onPressed: _navigateToAddItemPage,
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add Your First Item'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
     );
   }
 
@@ -745,16 +1092,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       itemBuilder: (context, index) {
         final item = items[index];
         return Container(
-          margin: EdgeInsets.only(bottom: 12),
+          margin: const EdgeInsets.only(bottom: 12),
           child: GroceryItemCard(
             item: item,
-            onToggleCompletion: (key, isCompleted) async {
-              await _databaseHelper.toggleItemCompletion(key, isCompleted);
-              if (isCompleted) {
-                final historyProvider = Provider.of<HistoryProvider>(context, listen: false);
-                historyProvider.addShoppingSession([item]);
+            onDelete: (key) async {
+              try {
+                await _databaseHelper.deleteGroceryItem(key);
+                
+                if (mounted) {
+                  _fetchGroceryItems();
+                }
+              } catch (e) {
+                debugPrint('Error deleting item: $e');
+                // Optionally show an error message to user
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete item: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
-              _fetchGroceryItems();
             },
           ),
         );
@@ -792,4 +1151,5 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
+
 }
