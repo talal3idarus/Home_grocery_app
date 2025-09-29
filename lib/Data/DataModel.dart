@@ -34,7 +34,11 @@ class GroceryItemData {
   int? quantity;
   String? urgency;
   String? addedBy;
-  String? timestamp; 
+  String? timestamp;
+  String? category;
+  List<String>? tags;
+  bool? isCompleted;
+  bool? isSynced; // For offline support 
 
   
   
@@ -44,9 +48,12 @@ class GroceryItemData {
     this.quantity, 
     this.urgency, 
     this.addedBy, 
-    this.timestamp
-    });
-
+    this.timestamp,
+    this.category,
+    this.tags,
+    this.isCompleted = false,
+    this.isSynced = true,
+  });
 
   factory GroceryItemData.fromJson(Map<String, dynamic> json) {
     return GroceryItemData(
@@ -55,6 +62,10 @@ class GroceryItemData {
       urgency: json['urgency'],
       addedBy: json['addedBy'],
       timestamp: json['timestamp'],
+      category: json['category'],
+      tags: json['tags'] != null ? List<String>.from(json['tags']) : null,
+      isCompleted: json['isCompleted'] ?? false,
+      isSynced: json['isSynced'] ?? true,
     );
   }
 
@@ -65,18 +76,10 @@ class GroceryItemData {
       'urgency': urgency,
       'addedBy': addedBy,
       'timestamp': timestamp,
+      'category': category,
+      'tags': tags,
+      'isCompleted': isCompleted,
+      'isSynced': isSynced,
     };
-  }
-}
-
-double? _checkDouble(value) {
-  if (value is String) {
-    return double.tryParse(value);
-  } else if (value is double) {
-    return value;
-  } else if (value is int) {
-    return value.toDouble();
-  } else {
-    return null;
   }
 }
